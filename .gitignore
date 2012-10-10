@@ -5,4 +5,5 @@
 */.externalToolBuilders
 build.xml
 local.properties
+*.properties
 *.iml
