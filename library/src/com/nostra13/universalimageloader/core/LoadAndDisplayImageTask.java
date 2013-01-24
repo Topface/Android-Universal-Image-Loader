@@ -1,30 +1,21 @@
 package com.nostra13.universalimageloader.core;
 
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.locks.ReentrantLock;
-
 import android.graphics.Bitmap;
 import android.os.Handler;
 import android.os.SystemClock;
 import android.widget.ImageView;
-
 import com.nostra13.universalimageloader.cache.disc.DiscCacheAware;
-import com.nostra13.universalimageloader.core.assist.FailReason;
-import com.nostra13.universalimageloader.core.assist.ImageLoadingListener;
-import com.nostra13.universalimageloader.core.assist.ImageScaleType;
-import com.nostra13.universalimageloader.core.assist.ImageSize;
-import com.nostra13.universalimageloader.core.assist.ViewScaleType;
+import com.nostra13.universalimageloader.core.assist.*;
 import com.nostra13.universalimageloader.core.download.ImageDownloader;
+import com.nostra13.universalimageloader.postprocessors.ImagePostProcessor;
 import com.nostra13.universalimageloader.utils.FileUtils;
 import com.nostra13.universalimageloader.utils.L;
+
+import java.io.*;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Presents load'n'display image task. Used to load image from Internet or file system, decode it to {@link Bitmap}, and
@@ -65,21 +56,27 @@ final class LoadAndDisplayImageTask implements Runnable {
 	private final ImageSize targetSize;
 	private final DisplayImageOptions options;
 	private final ImageLoadingListener listener;
+	private final ImagePostProcessor processor;
 
 	public LoadAndDisplayImageTask(ImageLoaderConfiguration configuration, ImageLoadingInfo imageLoadingInfo, Handler handler) {
-		this.configuration = configuration;
-		this.imageLoadingInfo = imageLoadingInfo;
-		this.handler = handler;
-
-		downloader = configuration.downloader;
-		loggingEnabled = configuration.loggingEnabled;
-		uri = imageLoadingInfo.uri;
-		memoryCacheKey = imageLoadingInfo.memoryCacheKey;
-		imageView = imageLoadingInfo.imageView;
-		targetSize = imageLoadingInfo.targetSize;
-		options = imageLoadingInfo.options;
-		listener = imageLoadingInfo.listener;
+		this(configuration, imageLoadingInfo, handler, null);
 	}
+
+    public LoadAndDisplayImageTask(ImageLoaderConfiguration configuration, ImageLoadingInfo imageLoadingInfo, Handler handler, ImagePostProcessor processor) {
+        this.configuration = configuration;
+        this.imageLoadingInfo = imageLoadingInfo;
+        this.handler = handler;
+        this.processor = processor;
+
+        downloader = configuration.downloader;
+        loggingEnabled = configuration.loggingEnabled;
+        uri = imageLoadingInfo.uri;
+        memoryCacheKey = imageLoadingInfo.memoryCacheKey;
+        imageView = imageLoadingInfo.imageView;
+        targetSize = imageLoadingInfo.targetSize;
+        options = imageLoadingInfo.options;
+        listener = imageLoadingInfo.listener;
+    }
 
 	@Override
 	public void run() {
@@ -129,6 +126,11 @@ final class LoadAndDisplayImageTask implements Runnable {
 				if (bmp == null) return;
 
 				if (checkTaskIsNotActual() || checkTaskIsInterrupted()) return;
+
+                if (processor != null) {
+                    L.i("Preprocess bitmap", memoryCacheKey);
+                    bmp = processor.processBitmap(bmp);
+                }
 
 				if (options.isCacheInMemory()) {
 					if (loggingEnabled) L.i(LOG_CACHE_IMAGE_IN_MEMORY, memoryCacheKey);

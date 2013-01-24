@@ -1,13 +1,13 @@
 package com.nostra13.universalimageloader.core.assist;
 
+import android.graphics.Bitmap;
+import com.nostra13.universalimageloader.cache.memory.MemoryCacheAware;
+import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
+import com.nostra13.universalimageloader.postprocessors.ImagePostProcessor;
+
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-
-import android.graphics.Bitmap;
-
-import com.nostra13.universalimageloader.cache.memory.MemoryCacheAware;
-import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 
 /**
  * Utility for generating of keys for memory cache, key comparing and other work with memory cache
@@ -30,6 +30,11 @@ public final class MemoryCacheUtil {
 	public static String generateKey(String imageUri, ImageSize targetSize) {
 		return String.format(MEMORY_CACHE_KEY_FORMAT, imageUri, targetSize.getWidth(), targetSize.getHeight());
 	}
+
+    public static String generateKey(String imageUri, ImageSize targetSize, ImagePostProcessor processor) {
+        String key = generateKey(imageUri, targetSize);
+        return processor != null ? processor.addCachePrefix(key) : key;
+    }
 
 	public static Comparator<String> createFuzzyKeyComparator() {
 		return new Comparator<String>() {

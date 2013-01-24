@@ -1,18 +1,5 @@
 package com.nostra13.universalimageloader.core;
 
-import java.lang.reflect.Field;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.WeakHashMap;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.locks.ReentrantLock;
-
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.os.Handler;
@@ -20,18 +7,23 @@ import android.util.DisplayMetrics;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.ImageView;
 import android.widget.ImageView.ScaleType;
-
 import com.nostra13.universalimageloader.cache.disc.DiscCacheAware;
 import com.nostra13.universalimageloader.cache.memory.MemoryCacheAware;
-import com.nostra13.universalimageloader.core.assist.ImageLoadingListener;
-import com.nostra13.universalimageloader.core.assist.ImageSize;
-import com.nostra13.universalimageloader.core.assist.MemoryCacheUtil;
-import com.nostra13.universalimageloader.core.assist.QueueProcessingType;
-import com.nostra13.universalimageloader.core.assist.SimpleImageLoadingListener;
+import com.nostra13.universalimageloader.core.assist.*;
 import com.nostra13.universalimageloader.core.assist.deque.LIFOLinkedBlockingDeque;
 import com.nostra13.universalimageloader.core.display.BitmapDisplayer;
 import com.nostra13.universalimageloader.core.display.FakeBitmapDisplayer;
+import com.nostra13.universalimageloader.postprocessors.ImagePostProcessor;
 import com.nostra13.universalimageloader.utils.L;
+
+import java.lang.reflect.Field;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.WeakHashMap;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Singletone for image loading and displaying at {@link ImageView ImageViews}<br />
@@ -171,64 +163,68 @@ public class ImageLoader {
 	 *             if {@link #init(ImageLoaderConfiguration)} method wasn't called before
 	 */
 	public void displayImage(String uri, ImageView imageView, DisplayImageOptions options, ImageLoadingListener listener) {
-		if (configuration == null) {
-			throw new RuntimeException(ERROR_NOT_INIT);
-		}
-		if (imageView == null) {
-			L.w(TAG, ERROR_WRONG_ARGUMENTS);
-			return;
-		}
-		if (listener == null) {
-			listener = emptyListener;
-		}
-		if (options == null) {
-			options = configuration.defaultDisplayImageOptions;
-		}
-
-		if (uri == null || uri.length() == 0) {
-			cacheKeysForImageViews.remove(imageView.hashCode());
-			listener.onLoadingStarted();
-			if (options.isShowImageForEmptyUri()) {
-				imageView.setImageResource(options.getImageForEmptyUri());
-			} else {
-				imageView.setImageBitmap(null);
-			}
-			listener.onLoadingComplete(null);
-			return;
-		}
-
-		ImageSize targetSize = getImageSizeScaleTo(imageView);
-		String memoryCacheKey = MemoryCacheUtil.generateKey(uri, targetSize);
-		cacheKeysForImageViews.put(imageView.hashCode(), memoryCacheKey);
-
-		Bitmap bmp = configuration.memoryCache.get(memoryCacheKey);
-		if (bmp != null && !bmp.isRecycled()) {
-			if (configuration.loggingEnabled) L.i(LOG_LOAD_IMAGE_FROM_MEMORY_CACHE, memoryCacheKey);
-			listener.onLoadingStarted();
-			options.getDisplayer().display(bmp, imageView);
-			listener.onLoadingComplete(bmp);
-		} else {
-			listener.onLoadingStarted();
-
-			if (options.isShowStubImage()) {
-				imageView.setImageResource(options.getStubImage());
-			} else {
-				if (options.isResetViewBeforeLoading()) {
-					imageView.setImageBitmap(null);
-				}
-			}
-
-			initExecutorsIfNeed();
-			ImageLoadingInfo imageLoadingInfo = new ImageLoadingInfo(uri, imageView, targetSize, options, listener, getLockForUri(uri));
-			LoadAndDisplayImageTask displayImageTask = new LoadAndDisplayImageTask(configuration, imageLoadingInfo, new Handler());
-			boolean isImageCachedOnDisc = configuration.discCache.get(uri).exists();
-			if (isImageCachedOnDisc) {
-				cachedImageLoadingExecutor.submit(displayImageTask);
-			} else {
-				imageLoadingExecutor.submit(displayImageTask);
-			}
-		}
+		displayImage(uri, imageView, options, listener, null);
 	}
+
+    public void displayImage(String uri, ImageView imageView, DisplayImageOptions options, ImageLoadingListener listener, ImagePostProcessor postProcessor) {
+        if (configuration == null) {
+            throw new RuntimeException(ERROR_NOT_INIT);
+        }
+        if (imageView == null) {
+            L.w(TAG, ERROR_WRONG_ARGUMENTS);
+            return;
+        }
+        if (listener == null) {
+            listener = emptyListener;
+        }
+        if (options == null) {
+            options = configuration.defaultDisplayImageOptions;
+        }
+
+        if (uri == null || uri.length() == 0) {
+            cacheKeysForImageViews.remove(imageView.hashCode());
+            listener.onLoadingStarted();
+            if (options.isShowImageForEmptyUri()) {
+                imageView.setImageResource(options.getImageForEmptyUri());
+            } else {
+                imageView.setImageBitmap(null);
+            }
+            listener.onLoadingComplete(null);
+            return;
+        }
+
+        ImageSize targetSize = getImageSizeScaleTo(imageView);
+        String memoryCacheKey = MemoryCacheUtil.generateKey(uri, targetSize, postProcessor);
+        cacheKeysForImageViews.put(imageView.hashCode(), memoryCacheKey);
+
+        Bitmap bmp = configuration.memoryCache.get(memoryCacheKey);
+        if (bmp != null && !bmp.isRecycled()) {
+            if (configuration.loggingEnabled) L.i(LOG_LOAD_IMAGE_FROM_MEMORY_CACHE, memoryCacheKey);
+            listener.onLoadingStarted();
+            options.getDisplayer().display(bmp, imageView);
+            listener.onLoadingComplete(bmp);
+        } else {
+            listener.onLoadingStarted();
+
+            if (options.isShowStubImage()) {
+                imageView.setImageResource(options.getStubImage());
+            } else {
+                if (options.isResetViewBeforeLoading()) {
+                    imageView.setImageBitmap(null);
+                }
+            }
+
+            initExecutorsIfNeed();
+            ImageLoadingInfo imageLoadingInfo = new ImageLoadingInfo(uri, imageView, targetSize, options, listener, getLockForUri(uri), postProcessor);
+            LoadAndDisplayImageTask displayImageTask = new LoadAndDisplayImageTask(configuration, imageLoadingInfo, new Handler(), postProcessor);
+            boolean isImageCachedOnDisc = configuration.discCache.get(uri).exists();
+            if (isImageCachedOnDisc) {
+                cachedImageLoadingExecutor.submit(displayImageTask);
+            } else {
+                imageLoadingExecutor.submit(displayImageTask);
+            }
+        }
+    }
 
 	/**
 	 * Adds load image task to execution pool. Image will be returned with
@@ -481,4 +477,5 @@ public class ImageLoader {
 	AtomicBoolean getPause() {
 		return paused;
 	}
+
 }
