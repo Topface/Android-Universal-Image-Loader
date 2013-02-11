@@ -1,3 +1,18 @@
+/*******************************************************************************
+ * Copyright 2011-2013 Sergey Tarasevich
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *******************************************************************************/
 package com.nostra13.universalimageloader.core;
 
 import java.util.concurrent.ThreadFactory;
@@ -13,6 +28,7 @@ import com.nostra13.universalimageloader.cache.memory.MemoryCacheAware;
 import com.nostra13.universalimageloader.core.assist.FailReason;
 import com.nostra13.universalimageloader.core.assist.ImageLoadingListener;
 import com.nostra13.universalimageloader.core.assist.QueueProcessingType;
+import com.nostra13.universalimageloader.core.download.NetworkDeniedImageDownloader;
 import com.nostra13.universalimageloader.core.download.ImageDownloader;
 import com.nostra13.universalimageloader.utils.L;
 
@@ -20,6 +36,7 @@ import com.nostra13.universalimageloader.utils.L;
  * Presents configuration for {@link ImageLoader}
  * 
  * @author Sergey Tarasevich (nostra13[at]gmail[dot]com)
+ * @since 1.0.0
  * @see ImageLoader
  * @see MemoryCacheAware
  * @see DiscCacheAware
@@ -28,6 +45,8 @@ import com.nostra13.universalimageloader.utils.L;
  * @see FileNameGenerator
  */
 public final class ImageLoaderConfiguration {
+
+	final Context context;
 
 	final int maxImageWidthForMemoryCache;
 	final int maxImageHeightForMemoryCache;
@@ -47,7 +66,10 @@ public final class ImageLoaderConfiguration {
 	final ThreadFactory displayImageThreadFactory;
 	final boolean loggingEnabled;
 
+	final ImageDownloader networkDeniedDownloader;
+	
 	private ImageLoaderConfiguration(final Builder builder) {
+		context = builder.context;
 		maxImageWidthForMemoryCache = builder.maxImageWidthForMemoryCache;
 		maxImageHeightForMemoryCache = builder.maxImageHeightForMemoryCache;
 		maxImageWidthForDiscCache = builder.maxImageWidthForDiscCache;
@@ -70,6 +92,8 @@ public final class ImageLoaderConfiguration {
 				return t;
 			}
 		};
+
+		networkDeniedDownloader = new NetworkDeniedImageDownloader(downloader);
 	}
 
 	/**
@@ -86,8 +110,8 @@ public final class ImageLoaderConfiguration {
 	 * <li>memoryCache = {@link UsingFreqLimitedCache} with limited memory cache size (
 	 * {@link Builder#DEFAULT_MEMORY_CACHE_SIZE this} bytes)</li>
 	 * <li>discCache = {@link UnlimitedDiscCache}</li>
-	 * <li>imageDownloader = {@link ImageDownloader#createDefault()}</li>
-	 * <li>discCacheFileNameGenerator = {@link FileNameGenerator#createDefault()}</li>
+	 * <li>imageDownloader = {@link DefaultConfigurationFactory#createImageDownloader(Context)}</li>
+	 * <li>discCacheFileNameGenerator = {@link DefaultConfigurationFactory#createFileNameGenerator()}</li>
 	 * <li>defaultDisplayImageOptions = {@link DisplayImageOptions#createSimple() Simple options}</li>
 	 * <li>tasksProcessingOrder = {@link QueueProcessingType#FIFO}</li>
 	 * <li>detailed logging disabled</li>
@@ -146,18 +170,16 @@ public final class ImageLoaderConfiguration {
 		private boolean loggingEnabled = false;
 
 		public Builder(Context context) {
-			this.context = context;
+			this.context = context.getApplicationContext();
 		}
 
 		/**
 		 * Sets options for memory cache
 		 * 
-		 * @param maxImageWidthForMemoryCache
-		 *            Maximum image width which will be used for memory saving during decoding an image to
-		 *            {@link android.graphics.Bitmap Bitmap}. <b>Default value - device's screen width</b>
-		 * @param maxImageHeightForMemoryCache
-		 *            Maximum image height which will be used for memory saving during decoding an image to
-		 *            {@link android.graphics.Bitmap Bitmap}. <b>Default value</b> - device's screen height
+		 * @param maxImageWidthForMemoryCache Maximum image width which will be used for memory saving during decoding
+		 *            an image to {@link android.graphics.Bitmap Bitmap}. <b>Default value - device's screen width</b>
+		 * @param maxImageHeightForMemoryCache Maximum image height which will be used for memory saving during decoding
+		 *            an image to {@link android.graphics.Bitmap Bitmap}. <b>Default value</b> - device's screen height
 		 */
 		public Builder memoryCacheExtraOptions(int maxImageWidthForMemoryCache, int maxImageHeightForMemoryCache) {
 			this.maxImageWidthForMemoryCache = maxImageWidthForMemoryCache;
@@ -169,16 +191,12 @@ public final class ImageLoaderConfiguration {
 		 * Sets options for resizing/compressing of downloaded images before saving to disc cache.<br />
 		 * <b>NOTE: Use this option only when you have appropriate needs. It can make ImageLoader slower.</b>
 		 * 
-		 * @param maxImageWidthForDiscCache
-		 *            Maximum width of downloaded images for saving at disc cache
-		 * @param maxImageHeightForDiscCache
-		 *            Maximum height of downloaded images for saving at disc cache
-		 * @param compressFormat
-		 *            {@link android.graphics.Bitmap.CompressFormat Compress format} downloaded images to save them at
-		 *            disc cache
-		 * @param compressQuality
-		 *            Hint to the compressor, 0-100. 0 meaning compress for small size, 100 meaning compress for max
-		 *            quality. Some formats, like PNG which is lossless, will ignore the quality setting
+		 * @param maxImageWidthForDiscCache Maximum width of downloaded images for saving at disc cache
+		 * @param maxImageHeightForDiscCache Maximum height of downloaded images for saving at disc cache
+		 * @param compressFormat {@link android.graphics.Bitmap.CompressFormat Compress format} downloaded images to
+		 *            save them at disc cache
+		 * @param compressQuality Hint to the compressor, 0-100. 0 meaning compress for small size, 100 meaning compress
+		 *            for max quality. Some formats, like PNG which is lossless, will ignore the quality setting
 		 */
 		public Builder discCacheExtraOptions(int maxImageWidthForDiscCache, int maxImageHeightForDiscCache, CompressFormat compressFormat, int compressQuality) {
 			this.maxImageWidthForDiscCache = maxImageWidthForDiscCache;
@@ -329,7 +347,7 @@ public final class ImageLoaderConfiguration {
 		/**
 		 * Sets utility which will be responsible for downloading of image.<br />
 		 * Default value -
-		 * {@link com.nostra13.universalimageloader.core.DefaultConfigurationFactory#createImageDownloader()
+		 * {@link com.nostra13.universalimageloader.core.DefaultConfigurationFactory#createImageDownloader(Context)
 		 * DefaultConfigurationFactory.createImageDownloader()}
 		 * */
 		public Builder imageDownloader(ImageDownloader imageDownloader) {
@@ -387,7 +405,7 @@ public final class ImageLoaderConfiguration {
 				memoryCache = DefaultConfigurationFactory.createMemoryCache(memoryCacheSize, denyCacheImageMultipleSizesInMemory);
 			}
 			if (downloader == null) {
-				downloader = DefaultConfigurationFactory.createImageDownloader();
+				downloader = DefaultConfigurationFactory.createImageDownloader(context);
 			}
 			if (defaultDisplayImageOptions == null) {
 				defaultDisplayImageOptions = DisplayImageOptions.createSimple();

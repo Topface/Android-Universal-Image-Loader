@@ -1,3 +1,18 @@
+/*******************************************************************************
+ * Copyright 2011-2013 Sergey Tarasevich
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *******************************************************************************/
 package com.nostra13.example.universalimageloader;
 
 /**
@@ -55,7 +70,6 @@ public final class Constants {
 			"http://www.bandwidthblog.com/wp-content/uploads/2011/11/twitter-logo.png",
 			"http://weloveicons.s3.amazonaws.com/icons/100907_itunes1.png",
 			"http://weloveicons.s3.amazonaws.com/icons/100929_applications.png",
-			"http://t2.gstatic.com/images?q=tbn:ANd9GcTJixLIo_zlOPOILuxNWc5evK333pZCH8rugaTtv3SZSfiI39T0-3vWYQ",
 			"http://www.idyllicmusic.com/index_files/get_apple-iphone.png",
 			"http://www.frenchrevolutionfood.com/wp-content/uploads/2009/04/Twitter-Bird.png",
 			"http://3.bp.blogspot.com/-ka5MiRGJ_S4/TdD9OoF6bmI/AAAAAAAAE8k/7ydKtptUtSg/s1600/Google_Sky%2BMaps_Android.png",
@@ -77,9 +91,9 @@ public final class Constants {
 			// Special cases
 			"file:///sdcard/UniversalImageLoader.png", // Image from SD card
 			"assets://LivingThings.jpg", // Image from assets
-			"drawable://" + R.drawable.app_icon, // Image from drawables
+			"drawable://" + R.drawable.ic_launcher, // Image from drawables
 			"http://upload.wikimedia.org/wikipedia/ru/b/b6/Как_кот_с_мышами_воевал.png", // Link with UTF-8
-			"https://www.iabti.org/images/M_images/Twitter_Image/follow_twitter_button_d.png", // Image from HTTPS
+			"https://www.eff.org/sites/default/files/chrome150_0.jpg", // Image from HTTPS
 			"http://bit.ly/soBiXr", // Redirect link
 			"", // Empty link
 			"http://wrong.site.com/corruptedLink", // Wrong link
@@ -88,6 +102,10 @@ public final class Constants {
 	private Constants() {
 	}
 
+	public static class Config {
+		public static final boolean DEVELOPER_MODE = false;
+	}
+	
 	public static class Extra {
 		public static final String IMAGES = "com.nostra13.example.universalimageloader.IMAGES";
 		public static final String IMAGE_POSITION = "com.nostra13.example.universalimageloader.IMAGE_POSITION";

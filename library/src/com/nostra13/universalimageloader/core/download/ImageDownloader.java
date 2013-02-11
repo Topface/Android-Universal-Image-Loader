@@ -1,50 +1,52 @@
+/*******************************************************************************
+ * Copyright 2011-2013 Sergey Tarasevich
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *******************************************************************************/
 package com.nostra13.universalimageloader.core.download;
 
-import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 
+import com.nostra13.universalimageloader.core.DisplayImageOptions;
+
 /**
- * Provides retrieving of {@link InputStream} of image by URI.
+ * Provides retrieving of {@link InputStream} of image by URI.<br />
+ * Implementations have to be thread-safe.
  * 
  * @author Sergey Tarasevich (nostra13[at]gmail[dot]com)
+ * @since 1.4.0
  */
-public abstract class ImageDownloader {
+public interface ImageDownloader {
 
-	protected static final String PROTOCOL_FILE = "file";
-
-	protected static final String PROTOCOL_HTTP = "http";
-	protected static final String PROTOCOL_HTTPS = "https";
-	protected static final String PROTOCOL_FTP = "ftp";
-
-	protected static final int BUFFER_SIZE = 8 * 1024; // 8 Kb
-
-	/** Retrieves {@link InputStream} of image by URI. Image can be located as in the network and on local file system. */
-	public InputStream getStream(URI imageUri) throws IOException {
-		String scheme = imageUri.getScheme();
-		if (PROTOCOL_HTTP.equals(scheme) || PROTOCOL_HTTPS.equals(scheme) || PROTOCOL_FTP.equals(scheme)) {
-			return getStreamFromNetwork(imageUri);
-		} else if (PROTOCOL_FILE.equals(scheme)) {
-			return getStreamFromFile(imageUri);
-		} else {
-			return getStreamFromOtherSource(imageUri);
-		}
-	}
+	/// Supported URI schemes(protocols)
+	String SCHEME_HTTP = "http";
+	String SCHEME_HTTPS = "https";
+	String SCHEME_FILE = "file";
+	String SCHEME_CONTENT = "content";
+	String SCHEME_ASSETS = "assets";
+	String SCHEME_DRAWABLE = "drawable";
 
 	/**
-	 * Retrieves {@link InputStream} of image by URI from other source. Should be overriden by successors to implement
-	 * image downloading from special sources (not local file and not web URL).
+	 * Retrieves {@link InputStream} of image by URI.
+	 * 
+	 * @param imageUri Image URI
+	 * @param extra Auxiliary object which was passed to {@link DisplayImageOptions.Builder#extraForDownloader(Object)
+	 *            DisplayImageOptions.extraForDownloader(Object)}; can be null
+	 * @return {@link InputStream} of image
+	 * @throws IOException if some I/O error occurs during getting image stream
+	 * @throws UnsupportedOperationException if image URI has unsupported scheme(protocol)
 	 */
-	protected InputStream getStreamFromOtherSource(URI imageUri) throws IOException {
-		return null;
-	}
-
-	/** Retrieves {@link InputStream} of image by URI (image is located in the network) */
-	protected abstract InputStream getStreamFromNetwork(URI imageUri) throws IOException;
-
-	/** Retrieves {@link InputStream} of image by URI (image is located on the local file system or SD card) */
-	protected InputStream getStreamFromFile(URI imageUri) throws IOException {
-		return new BufferedInputStream(imageUri.toURL().openStream(), BUFFER_SIZE);
-	}
+	InputStream getStream(URI imageUri, Object extra) throws IOException;
 }

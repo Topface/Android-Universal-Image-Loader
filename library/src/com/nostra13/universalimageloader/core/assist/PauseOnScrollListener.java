@@ -1,3 +1,18 @@
+/*******************************************************************************
+ * Copyright 2011-2013 Sergey Tarasevich
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *******************************************************************************/
 package com.nostra13.universalimageloader.core.assist;
 
 import android.widget.AbsListView;
@@ -15,8 +30,11 @@ import com.nostra13.universalimageloader.core.ImageLoader;
  * This listener can wrap your custom {@linkplain OnScrollListener listener}.
  * 
  * @author Sergey Tarasevich (nostra13[at]gmail[dot]com)
+ * @since 1.7.0
  */
 public class PauseOnScrollListener implements OnScrollListener {
+
+	private ImageLoader imageLoader;
 
 	private final boolean pauseOnScroll;
 	private final boolean pauseOnFling;
@@ -25,22 +43,25 @@ public class PauseOnScrollListener implements OnScrollListener {
 	/**
 	 * Constructor
 	 * 
+	 * @param imageLoader {@linkplain ImageLoader} instance for controlling
 	 * @param pauseOnScroll Whether {@linkplain ImageLoader#pause() pause ImageLoader} during touch scrolling
 	 * @param pauseOnFling Whether {@linkplain ImageLoader#pause() pause ImageLoader} during fling
 	 */
-	public PauseOnScrollListener(boolean pauseOnScroll, boolean pauseOnFling) {
-		this(pauseOnScroll, pauseOnFling, null);
+	public PauseOnScrollListener(ImageLoader imageLoader, boolean pauseOnScroll, boolean pauseOnFling) {
+		this(imageLoader, pauseOnScroll, pauseOnFling, null);
 	}
 
 	/**
 	 * Constructor
 	 * 
+	 * @param imageLoader {@linkplain ImageLoader} instance for controlling
 	 * @param pauseOnScroll Whether {@linkplain ImageLoader#pause() pause ImageLoader} during touch scrolling
 	 * @param pauseOnFling Whether {@linkplain ImageLoader#pause() pause ImageLoader} during fling
 	 * @param customListener Your custom {@link OnScrollListener} for {@linkplain AbsListView list view} which also will
 	 *            be get scroll events
 	 */
-	public PauseOnScrollListener(boolean pauseOnScroll, boolean pauseOnFling, OnScrollListener customListener) {
+	public PauseOnScrollListener(ImageLoader imageLoader, boolean pauseOnScroll, boolean pauseOnFling, OnScrollListener customListener) {
+		this.imageLoader = imageLoader;
 		this.pauseOnScroll = pauseOnScroll;
 		this.pauseOnFling = pauseOnFling;
 		externalListener = customListener;
@@ -50,16 +71,16 @@ public class PauseOnScrollListener implements OnScrollListener {
 	public void onScrollStateChanged(AbsListView view, int scrollState) {
 		switch (scrollState) {
 			case OnScrollListener.SCROLL_STATE_IDLE:
-				ImageLoader.getInstance().resume();
+				imageLoader.resume();
 				break;
 			case OnScrollListener.SCROLL_STATE_TOUCH_SCROLL:
 				if (pauseOnScroll) {
-					ImageLoader.getInstance().pause();
+					imageLoader.pause();
 				}
 				break;
 			case OnScrollListener.SCROLL_STATE_FLING:
 				if (pauseOnFling) {
-					ImageLoader.getInstance().pause();
+					imageLoader.pause();
 				}
 				break;
 		}

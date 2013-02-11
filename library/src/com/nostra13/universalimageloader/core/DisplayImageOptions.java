@@ -1,22 +1,44 @@
+/*******************************************************************************
+ * Copyright 2011-2013 Sergey Tarasevich
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *******************************************************************************/
 package com.nostra13.universalimageloader.core;
 
 import android.graphics.Bitmap;
+import android.widget.ImageView;
 
 import com.nostra13.universalimageloader.core.assist.ImageScaleType;
 import com.nostra13.universalimageloader.core.display.BitmapDisplayer;
 import com.nostra13.universalimageloader.core.display.SimpleBitmapDisplayer;
+import com.nostra13.universalimageloader.core.download.ImageDownloader;
+import com.nostra13.universalimageloader.core.process.BitmapProcessor;
 
 /**
  * Contains options for image display. Defines:
  * <ul>
  * <li>whether stub image will be displayed in {@link android.widget.ImageView ImageView} during image loading</li>
  * <li>whether stub image will be displayed in {@link android.widget.ImageView ImageView} if empty URI is passed</li>
+ * <li>whether stub image will be displayed in {@link android.widget.ImageView ImageView} if image loading fails</li>
  * <li>whether {@link android.widget.ImageView ImageView} should be reset before image loading start</li>
  * <li>whether loaded image will be cached in memory</li>
  * <li>whether loaded image will be cached on disc</li>
  * <li>image scale type</li>
  * <li>bitmap decoding configuration</li>
  * <li>delay before loading of image</li>
+ * <li>auxiliary object which will be passed to {@link ImageDownloader#getStream(java.net.URI, Object) ImageDownloader}</li>
+ * <li>pre-processor for image Bitmap (before caching in memory)</li>
+ * <li>post-processor for image Bitmap (after caching in memory, before displaying)</li>
  * <li>how decoded {@link Bitmap} will be displayed</li>
  * </ul>
  * 
@@ -30,45 +52,74 @@ import com.nostra13.universalimageloader.core.display.SimpleBitmapDisplayer;
  * <li>or by static method: {@link #createSimple()}</li> <br />
  * 
  * @author Sergey Tarasevich (nostra13[at]gmail[dot]com)
+ * @since 1.0.0
  */
 public final class DisplayImageOptions {
 
 	private final int stubImage;
 	private final int imageForEmptyUri;
+	private final int imageOnFail;
 	private final boolean resetViewBeforeLoading;
 	private final boolean cacheInMemory;
 	private final boolean cacheOnDisc;
 	private final ImageScaleType imageScaleType;
 	private final Bitmap.Config bitmapConfig;
 	private final int delayBeforeLoading;
+	private final Object extraForDownloader;
+	private final BitmapProcessor preProcessor;
+	private final BitmapProcessor postProcessor;
 	private final BitmapDisplayer displayer;
 
 	private DisplayImageOptions(Builder builder) {
 		stubImage = builder.stubImage;
 		imageForEmptyUri = builder.imageForEmptyUri;
+		imageOnFail = builder.imageOnFail;
 		resetViewBeforeLoading = builder.resetViewBeforeLoading;
 		cacheInMemory = builder.cacheInMemory;
 		cacheOnDisc = builder.cacheOnDisc;
 		imageScaleType = builder.imageScaleType;
 		bitmapConfig = builder.bitmapConfig;
 		delayBeforeLoading = builder.delayBeforeLoading;
+		extraForDownloader = builder.extraForDownloader;
+		preProcessor = builder.preProcessor;
+		postProcessor = builder.postProcessor;
 		displayer = builder.displayer;
 	}
 
-	boolean isShowStubImage() {
+	boolean shouldShowStubImage() {
 		return stubImage != 0;
 	}
 
-	boolean isShowImageForEmptyUri() {
+	boolean shouldShowImageForEmptyUri() {
 		return imageForEmptyUri != 0;
 	}
 
-	Integer getStubImage() {
+	boolean shouldShowImageOnFail() {
+		return imageOnFail != 0;
+	}
+
+	boolean shouldPreProcess() {
+		return preProcessor != null;
+	}
+
+	boolean shouldPostProcess() {
+		return postProcessor != null;
+	}
+
+	boolean shouldDelayBeforeLoading() {
+		return delayBeforeLoading > 0;
+	}
+
+	int getStubImage() {
 		return stubImage;
 	}
 
-	Integer getImageForEmptyUri() {
+	int getImageForEmptyUri() {
 		return imageForEmptyUri;
+	}
+
+	int getImageOnFail() {
+		return imageOnFail;
 	}
 
 	boolean isResetViewBeforeLoading() {
@@ -91,12 +142,20 @@ public final class DisplayImageOptions {
 		return bitmapConfig;
 	}
 
-	boolean isDelayBeforeLoading() {
-		return delayBeforeLoading > 0;
-	}
-
 	int getDelayBeforeLoading() {
 		return delayBeforeLoading;
+	}
+
+	Object getExtraForDownloader() {
+		return extraForDownloader;
+	}
+
+	BitmapProcessor getPreProcessor() {
+		return preProcessor;
+	}
+
+	BitmapProcessor getPostProcessor() {
+		return postProcessor;
 	}
 
 	BitmapDisplayer getDisplayer() {
@@ -111,19 +170,22 @@ public final class DisplayImageOptions {
 	public static class Builder {
 		private int stubImage = 0;
 		private int imageForEmptyUri = 0;
+		private int imageOnFail = 0;
 		private boolean resetViewBeforeLoading = false;
 		private boolean cacheInMemory = false;
 		private boolean cacheOnDisc = false;
 		private ImageScaleType imageScaleType = ImageScaleType.IN_SAMPLE_POWER_OF_2;
 		private Bitmap.Config bitmapConfig = Bitmap.Config.ARGB_8888;
 		private int delayBeforeLoading = 0;
+		private Object extraForDownloader = null;
+		private BitmapProcessor preProcessor = null;
+		private BitmapProcessor postProcessor = null;
 		private BitmapDisplayer displayer = DefaultConfigurationFactory.createBitmapDisplayer();
 
 		/**
 		 * Stub image will be displayed in {@link android.widget.ImageView ImageView} during image loading
 		 * 
-		 * @param stubImageRes
-		 *            Stub image resource
+		 * @param stubImageRes Stub image resource
 		 */
 		public Builder showStubImage(int stubImageRes) {
 			stubImage = stubImageRes;
@@ -131,14 +193,24 @@ public final class DisplayImageOptions {
 		}
 
 		/**
-		 * Image will be displayed in {@link android.widget.ImageView ImageView} if empty URI (null or empty string)
-		 * will be passed to <b>ImageLoader.displayImage(...)</b> method.
+		 * Incoming image will be displayed in {@link android.widget.ImageView ImageView} if empty URI (null or empty
+		 * string) will be passed to <b>ImageLoader.displayImage(...)</b> method.
 		 * 
-		 * @param imageRes
-		 *            Image resource
+		 * @param imageRes Image resource
 		 */
 		public Builder showImageForEmptyUri(int imageRes) {
 			imageForEmptyUri = imageRes;
+			return this;
+		}
+
+		/**
+		 * Incoming image will be displayed in {@link android.widget.ImageView ImageView} if some error occurs during
+		 * requested image loading/decoding.
+		 * 
+		 * @param imageRes Image resource
+		 */
+		public Builder showImageOnFail(int imageRes) {
+			imageOnFail = imageRes;
 			return this;
 		}
 
@@ -178,6 +250,31 @@ public final class DisplayImageOptions {
 		/** Sets delay time before starting loading task. Default - no delay. */
 		public Builder delayBeforeLoading(int delayInMillis) {
 			this.delayBeforeLoading = delayInMillis;
+			return this;
+		}
+
+		/** Sets auxiliary object which will be passed to {@link ImageDownloader#getStream(java.net.URI, Object)} */
+		public Builder extraForDownloader(Object extra) {
+			this.extraForDownloader = extra;
+			return this;
+		}
+
+		/**
+		 * Sets bitmap processor which will be process bitmaps before they will be cached in memory. So memory cache
+		 * will contain bitmap processed by incoming preProcessor.<br />
+		 * Image will be pre-processed even if caching in memory is disabled.
+		 */
+		public Builder preProcessor(BitmapProcessor preProcessor) {
+			this.preProcessor = preProcessor;
+			return this;
+		}
+
+		/**
+		 * Sets bitmap processor which will be process bitmaps before they will be displayed in {@link ImageView} but
+		 * after they'll have been saved in memory cache.
+		 */
+		public Builder postProcessor(BitmapProcessor postProcessor) {
+			this.postProcessor = postProcessor;
 			return this;
 		}
 

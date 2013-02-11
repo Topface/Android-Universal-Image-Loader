@@ -1,4 +1,23 @@
+/*******************************************************************************
+ * Copyright 2011-2013 Sergey Tarasevich
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *******************************************************************************/
 package com.nostra13.universalimageloader.core;
+
+import static com.nostra13.universalimageloader.core.ImageLoader.LOG_CANT_DECODE_IMAGE;
+import static com.nostra13.universalimageloader.core.ImageLoader.LOG_IMAGE_SCALED;
+import static com.nostra13.universalimageloader.core.ImageLoader.LOG_IMAGE_SUBSAMPLING;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -12,22 +31,20 @@ import com.nostra13.universalimageloader.core.assist.ImageScaleType;
 import com.nostra13.universalimageloader.core.assist.ImageSize;
 import com.nostra13.universalimageloader.core.assist.ViewScaleType;
 import com.nostra13.universalimageloader.core.download.ImageDownloader;
+import com.nostra13.universalimageloader.utils.IoUtils;
 import com.nostra13.universalimageloader.utils.L;
 
 /**
  * Decodes images to {@link Bitmap}, scales them to needed size
  * 
  * @author Sergey Tarasevich (nostra13[at]gmail[dot]com)
- * 
+ * @since 1.0.0
  * @see ImageScaleType
  * @see ViewScaleType
  * @see ImageDownloader
  * @see DisplayImageOptions
  */
 class ImageDecoder {
-
-	private static final String LOG_IMAGE_SUBSAMPLED = "Original image (%1$dx%2$d) is going to be subsampled to %3$dx%4$d view. Computed scale size - %5$d";
-	private static final String LOG_IMAGE_SCALED = "Subsampled image (%1$dx%2$d) was scaled to %3$dx%4$d";
 
 	private final URI imageUri;
 	private final ImageDownloader imageDownloader;
@@ -36,10 +53,8 @@ class ImageDecoder {
 	private boolean loggingEnabled;
 
 	/**
-	 * @param imageUri
-	 *            Image URI (<b>i.e.:</b> "http://site.com/image.png", "file:///mnt/sdcard/image.png")
-	 * @param imageDownloader
-	 *            Image downloader
+	 * @param imageUri Image URI (<b>i.e.:</b> "http://site.com/image.png", "file:///mnt/sdcard/image.png")
+	 * @param imageDownloader Image downloader
 	 * 
 	 */
 	ImageDecoder(URI imageUri, ImageDownloader imageDownloader, DisplayImageOptions options) {
@@ -52,42 +67,25 @@ class ImageDecoder {
 	 * Decodes image from URI into {@link Bitmap}. Image is scaled close to incoming {@link ImageSize image size} during
 	 * decoding (depend on incoming image scale type).
 	 * 
-	 * @param targetSize
-	 *            Image size to scale to during decoding
-	 * @param scaleType
-	 *            {@link ImageScaleType Image scale type}
+	 * @param targetSize Image size to scale to during decoding
+	 * @param scaleType {@link ImageScaleType Image scale type}
+	 * @param viewScaleType {@link ViewScaleType View scale type}
 	 * 
 	 * @return Decoded bitmap
 	 * @throws IOException
-	 */
-	public Bitmap decode(ImageSize targetSize, ImageScaleType scaleType) throws IOException {
-		return decode(targetSize, scaleType, ViewScaleType.FIT_INSIDE);
-	}
-
-	/**
-	 * Decodes image from URI into {@link Bitmap}. Image is scaled close to incoming {@link ImageSize image size} during
-	 * decoding (depend on incoming image scale type).
-	 * 
-	 * @param targetSize
-	 *            Image size to scale to during decoding
-	 * @param scaleType
-	 *            {@link ImageScaleType Image scale type}
-	 * @param viewScaleType
-	 *            {@link ViewScaleType View scale type}
-	 * 
-	 * @return Decoded bitmap
-	 * @throws IOException
+	 * @throws UnsupportedOperationException
 	 */
 	public Bitmap decode(ImageSize targetSize, ImageScaleType scaleType, ViewScaleType viewScaleType) throws IOException {
 		Options decodeOptions = getBitmapOptionsForImageDecoding(targetSize, scaleType, viewScaleType);
-		InputStream imageStream = imageDownloader.getStream(imageUri);
+		InputStream imageStream = imageDownloader.getStream(imageUri, displayOptions.getExtraForDownloader());
 		Bitmap subsampledBitmap;
 		try {
 			subsampledBitmap = BitmapFactory.decodeStream(imageStream, null, decodeOptions);
 		} finally {
-			imageStream.close();
+			IoUtils.closeSilently(imageStream);
 		}
 		if (subsampledBitmap == null) {
+			log(LOG_CANT_DECODE_IMAGE, imageUri);
 			return null;
 		}
 
@@ -101,12 +99,11 @@ class ImageDecoder {
 
 	private Options getBitmapOptionsForImageDecoding(ImageSize targetSize, ImageScaleType scaleType, ViewScaleType viewScaleType) throws IOException {
 		Options decodeOptions = new Options();
-		decodeOptions.inSampleSize = computeImageScale(targetSize, scaleType, viewScaleType);
+		decodeOptions.inSampleSize = scaleType == ImageScaleType.NONE ? 1 : computeImageScale(targetSize, scaleType, viewScaleType);
 		decodeOptions.inPreferredConfig = displayOptions.getBitmapConfig();
 		return decodeOptions;
 	}
 
-	@SuppressWarnings("deprecation")
 	private int computeImageScale(ImageSize targetSize, ImageScaleType scaleType, ViewScaleType viewScaleType) throws IOException {
 		int targetWidth = targetSize.getWidth();
 		int targetHeight = targetSize.getHeight();
@@ -114,11 +111,11 @@ class ImageDecoder {
 		// decode image size
 		Options options = new Options();
 		options.inJustDecodeBounds = true;
-		InputStream imageStream = imageDownloader.getStream(imageUri);
+		InputStream imageStream = imageDownloader.getStream(imageUri, displayOptions.getExtraForDownloader());
 		try {
 			BitmapFactory.decodeStream(imageStream, null, options);
 		} finally {
-			imageStream.close();
+			IoUtils.closeSilently(imageStream);
 		}
 
 		int scale = 1;
@@ -128,7 +125,7 @@ class ImageDecoder {
 		int heightScale = imageHeight / targetHeight;
 
 		if (viewScaleType == ViewScaleType.FIT_INSIDE) {
-			if (scaleType == ImageScaleType.IN_SAMPLE_POWER_OF_2 || scaleType == ImageScaleType.POWER_OF_2) {
+			if (scaleType == ImageScaleType.IN_SAMPLE_POWER_OF_2) {
 				while (imageWidth / 2 >= targetWidth || imageHeight / 2 >= targetHeight) { // ||
 					imageWidth /= 2;
 					imageHeight /= 2;
@@ -138,7 +135,7 @@ class ImageDecoder {
 				scale = Math.max(widthScale, heightScale); // max
 			}
 		} else { // ViewScaleType.CROP
-			if (scaleType == ImageScaleType.IN_SAMPLE_POWER_OF_2 || scaleType == ImageScaleType.POWER_OF_2) {
+			if (scaleType == ImageScaleType.IN_SAMPLE_POWER_OF_2) {
 				while (imageWidth / 2 >= targetWidth && imageHeight / 2 >= targetHeight) { // &&
 					imageWidth /= 2;
 					imageHeight /= 2;
@@ -153,7 +150,7 @@ class ImageDecoder {
 			scale = 1;
 		}
 
-		if (loggingEnabled) L.d(LOG_IMAGE_SUBSAMPLED, imageWidth, imageHeight, targetWidth, targetHeight, scale);
+		log(LOG_IMAGE_SUBSAMPLING, imageWidth, imageHeight, targetWidth, targetHeight, scale);
 		return scale;
 	}
 
@@ -181,7 +178,7 @@ class ImageDecoder {
 			if (scaledBitmap != subsampledBitmap) {
 				subsampledBitmap.recycle();
 			}
-			if (loggingEnabled) L.d(LOG_IMAGE_SCALED, (int) srcWidth, (int) srcHeight, destWidth, destHeight);
+			log(LOG_IMAGE_SCALED, (int) srcWidth, (int) srcHeight, destWidth, destHeight);
 		} else {
 			scaledBitmap = subsampledBitmap;
 		}
@@ -191,5 +188,9 @@ class ImageDecoder {
 
 	void setLoggingEnabled(boolean loggingEnabled) {
 		this.loggingEnabled = loggingEnabled;
+	}
+
+	private void log(String message, Object... args) {
+		if (loggingEnabled) L.i(message, args);
 	}
 }

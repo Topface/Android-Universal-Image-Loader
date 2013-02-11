@@ -1,3 +1,18 @@
+/*******************************************************************************
+ * Copyright 2011-2013 Sergey Tarasevich
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *******************************************************************************/
 package com.nostra13.universalimageloader.core.assist;
 
 import android.graphics.Bitmap;
@@ -9,15 +24,11 @@ import android.widget.ImageView.ScaleType;
  * Type of image scaling during decoding.
  * 
  * @author Sergey Tarasevich (nostra13[at]gmail[dot]com)
+ * @since 1.5.0
  */
 public enum ImageScaleType {
-	/**
-	 * The same as {@link #IN_SAMPLE_POWER_OF_2}
-	 * 
-	 * @deprecated Will be deleted in the future. Use {@link #IN_SAMPLE_POWER_OF_2}.
-	 */
-	@Deprecated
-	POWER_OF_2,
+	/** Image won't be scaled */
+	NONE,
 	/**
 	 * Image will be reduces 2-fold until next reduce step make image smaller target size.<br />
 	 * It's <b>fast</b> type and it's preferable for usage in lists/grids/galleries (and other {@linkplain AdapterView
@@ -26,13 +37,6 @@ public enum ImageScaleType {
 	 * Note: If original image size is smaller than target size then original image <b>won't</b> be scaled.
 	 */
 	IN_SAMPLE_POWER_OF_2,
-	/**
-	 * The same as {@link #IN_SAMPLE_INT}
-	 * 
-	 * @deprecated Will be deleted in the future. Use {@link #IN_SAMPLE_INT}.
-	 */
-	@Deprecated
-	EXACT,
 	/**
 	 * Image will be subsampled in an integer number of times. Use it if memory economy is quite important.<br />
 	 * Relates to {@link BitmapFactory.Options#inSampleSize}<br />

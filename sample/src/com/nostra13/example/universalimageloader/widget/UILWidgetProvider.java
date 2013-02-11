@@ -1,17 +1,33 @@
+/*******************************************************************************
+ * Copyright 2011-2013 Sergey Tarasevich
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *******************************************************************************/
 package com.nostra13.example.universalimageloader.widget;
 
 import static com.nostra13.example.universalimageloader.Constants.IMAGES;
+
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.view.View;
 import android.widget.RemoteViews;
 
 import com.nostra13.example.universalimageloader.R;
-import com.nostra13.universalimageloader.cache.disc.naming.Md5FileNameGenerator;
+import com.nostra13.example.universalimageloader.UILApplication;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
-import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 import com.nostra13.universalimageloader.core.assist.ImageSize;
 import com.nostra13.universalimageloader.core.assist.SimpleImageLoadingListener;
 import com.nostra13.universalimageloader.core.display.FakeBitmapDisplayer;
@@ -31,15 +47,10 @@ public class UILWidgetProvider extends AppWidgetProvider {
 
 	@Override
 	public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
-		// Initialize ImageLoader with configuration.
-		ImageLoaderConfiguration config = new ImageLoaderConfiguration.Builder(context).threadPoolSize(3).threadPriority(Thread.NORM_PRIORITY - 2)
-				.memoryCacheSize(1500000) // 1.5 Mb
-				.denyCacheImageMultipleSizesInMemory().discCacheFileNameGenerator(new Md5FileNameGenerator()).enableLogging() // Not necessary in common
-				.build();
-		ImageLoader.getInstance().init(config);
+		UILApplication.initImageLoader(context);
 
-		final int N = appWidgetIds.length;
-		for (int i = 0; i < N; i++) {
+		final int widgetCount = appWidgetIds.length;
+		for (int i = 0; i < widgetCount; i++) {
 			int appWidgetId = appWidgetIds[i];
 			updateAppWidget(context, appWidgetManager, appWidgetId);
 		}
@@ -49,16 +60,16 @@ public class UILWidgetProvider extends AppWidgetProvider {
 		final RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget);
 
 		ImageSize minImageSize = new ImageSize(70, 70); // 70 - approximate size of ImageView in widget
-		ImageLoader.getInstance().loadImage(context, IMAGES[0], minImageSize, optionsWithFakeDisplayer, new SimpleImageLoadingListener() {
+		ImageLoader.getInstance().loadImage(IMAGES[0], minImageSize, optionsWithFakeDisplayer, new SimpleImageLoadingListener() {
 			@Override
-			public void onLoadingComplete(Bitmap loadedImage) {
+			public void onLoadingComplete(String imageUri, View view, Bitmap loadedImage) {
 				views.setImageViewBitmap(R.id.image_left, loadedImage);
 				appWidgetManager.updateAppWidget(appWidgetId, views);
 			}
 		});
-		ImageLoader.getInstance().loadImage(context, IMAGES[1], minImageSize, optionsWithFakeDisplayer, new SimpleImageLoadingListener() {
+		ImageLoader.getInstance().loadImage(IMAGES[1], minImageSize, optionsWithFakeDisplayer, new SimpleImageLoadingListener() {
 			@Override
-			public void onLoadingComplete(Bitmap loadedImage) {
+			public void onLoadingComplete(String imageUri, View view, Bitmap loadedImage) {
 				views.setImageViewBitmap(R.id.image_right, loadedImage);
 				appWidgetManager.updateAppWidget(appWidgetId, views);
 			}

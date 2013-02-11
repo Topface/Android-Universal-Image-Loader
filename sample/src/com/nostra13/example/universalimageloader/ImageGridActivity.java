@@ -1,3 +1,18 @@
+/*******************************************************************************
+ * Copyright 2011-2013 Sergey Tarasevich
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *******************************************************************************/
 package com.nostra13.example.universalimageloader;
 
 import android.content.Intent;
@@ -33,8 +48,9 @@ public class ImageGridActivity extends BaseActivity {
 		imageUrls = bundle.getStringArray(Extra.IMAGES);
 
 		options = new DisplayImageOptions.Builder()
-			.showStubImage(R.drawable.stub_image)
-			.showImageForEmptyUri(R.drawable.image_for_empty_url)
+			.showStubImage(R.drawable.ic_stub)
+			.showImageForEmptyUri(R.drawable.ic_empty)
+			.showImageOnFail(R.drawable.ic_error)
 			.cacheInMemory()
 			.cacheOnDisc()
 			.bitmapConfig(Bitmap.Config.RGB_565)
@@ -45,13 +61,13 @@ public class ImageGridActivity extends BaseActivity {
 		gridView.setOnItemClickListener(new OnItemClickListener() {
 			@Override
 			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-				startImageGalleryActivity(position);
+				startImagePagerActivity(position);
 			}
 		});
-		gridView.setOnScrollListener(new PauseOnScrollListener(true, true));
+		gridView.setOnScrollListener(new PauseOnScrollListener(imageLoader, true, true));
 	}
 
-	private void startImageGalleryActivity(int position) {
+	private void startImagePagerActivity(int position) {
 		Intent intent = new Intent(this, ImagePagerActivity.class);
 		intent.putExtra(Extra.IMAGES, imageUrls);
 		intent.putExtra(Extra.IMAGE_POSITION, position);

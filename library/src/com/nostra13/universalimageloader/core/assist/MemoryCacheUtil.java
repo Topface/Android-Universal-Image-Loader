@@ -1,18 +1,34 @@
+/*******************************************************************************
+ * Copyright 2011-2013 Sergey Tarasevich
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *******************************************************************************/
 package com.nostra13.universalimageloader.core.assist;
-
-import android.graphics.Bitmap;
-import com.nostra13.universalimageloader.cache.memory.MemoryCacheAware;
-import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
-import com.nostra13.universalimageloader.postprocessors.ImagePostProcessor;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
+import android.graphics.Bitmap;
+
+import com.nostra13.universalimageloader.cache.memory.MemoryCacheAware;
+import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
+
 /**
  * Utility for generating of keys for memory cache, key comparing and other work with memory cache
  * 
  * @author Sergey Tarasevich (nostra13[at]gmail[dot]com)
+ * @since 1.6.3
  */
 public final class MemoryCacheUtil {
 
@@ -30,11 +46,6 @@ public final class MemoryCacheUtil {
 	public static String generateKey(String imageUri, ImageSize targetSize) {
 		return String.format(MEMORY_CACHE_KEY_FORMAT, imageUri, targetSize.getWidth(), targetSize.getHeight());
 	}
-
-    public static String generateKey(String imageUri, ImageSize targetSize, ImagePostProcessor processor) {
-        String key = generateKey(imageUri, targetSize);
-        return processor != null ? processor.addCachePrefix(key) : key;
-    }
 
 	public static Comparator<String> createFuzzyKeyComparator() {
 		return new Comparator<String>() {
