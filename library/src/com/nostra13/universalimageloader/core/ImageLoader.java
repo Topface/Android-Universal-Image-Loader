@@ -472,4 +472,9 @@ public class ImageLoader {
 		}
 		return value;
 	}
+
+    public String getMemoryCacheKey(ImageView imageView,String uri) {
+        ImageSize targetSize = getImageSizeScaleTo(imageView);
+        return MemoryCacheUtil.generateKey(uri, targetSize);
+    }
 }
