@@ -15,47 +15,24 @@
  *******************************************************************************/
 package com.nostra13.universalimageloader.core;
 
-import static com.nostra13.universalimageloader.core.ImageLoader.LOG_CACHE_IMAGE_IN_MEMORY;
-import static com.nostra13.universalimageloader.core.ImageLoader.LOG_CACHE_IMAGE_ON_DISC;
-import static com.nostra13.universalimageloader.core.ImageLoader.LOG_DELAY_BEFORE_LOADING;
-import static com.nostra13.universalimageloader.core.ImageLoader.LOG_GET_IMAGE_FROM_MEMORY_CACHE_AFTER_WAITING;
-import static com.nostra13.universalimageloader.core.ImageLoader.LOG_LOAD_IMAGE_FROM_DISC_CACHE;
-import static com.nostra13.universalimageloader.core.ImageLoader.LOG_LOAD_IMAGE_FROM_NETWORK;
-import static com.nostra13.universalimageloader.core.ImageLoader.LOG_POSTPROCESS_IMAGE;
-import static com.nostra13.universalimageloader.core.ImageLoader.LOG_PREPROCESS_IMAGE;
-import static com.nostra13.universalimageloader.core.ImageLoader.LOG_RESUME_AFTER_PAUSE;
-import static com.nostra13.universalimageloader.core.ImageLoader.LOG_START_DISPLAY_IMAGE_TASK;
-import static com.nostra13.universalimageloader.core.ImageLoader.LOG_TASK_CANCELLED;
-import static com.nostra13.universalimageloader.core.ImageLoader.LOG_TASK_INTERRUPTED;
-import static com.nostra13.universalimageloader.core.ImageLoader.LOG_WAITING_FOR_IMAGE_LOADED;
-import static com.nostra13.universalimageloader.core.ImageLoader.LOG_WAITING_FOR_RESUME;
-
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.locks.ReentrantLock;
-
 import android.graphics.Bitmap;
 import android.os.Handler;
 import android.widget.ImageView;
-
 import com.nostra13.universalimageloader.cache.disc.DiscCacheAware;
-import com.nostra13.universalimageloader.core.assist.FailReason;
+import com.nostra13.universalimageloader.core.assist.*;
 import com.nostra13.universalimageloader.core.assist.FailReason.FailType;
-import com.nostra13.universalimageloader.core.assist.ImageLoadingListener;
-import com.nostra13.universalimageloader.core.assist.ImageScaleType;
-import com.nostra13.universalimageloader.core.assist.ImageSize;
-import com.nostra13.universalimageloader.core.assist.ViewScaleType;
 import com.nostra13.universalimageloader.core.decode.ImageDecoder;
 import com.nostra13.universalimageloader.core.decode.ImageDecodingInfo;
 import com.nostra13.universalimageloader.core.download.ImageDownloader;
 import com.nostra13.universalimageloader.core.download.ImageDownloader.Scheme;
 import com.nostra13.universalimageloader.utils.IoUtils;
 import com.nostra13.universalimageloader.utils.L;
+
+import java.io.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.ReentrantLock;
+
+import static com.nostra13.universalimageloader.core.ImageLoader.*;
 
 /**
  * Presents load'n'display image task. Used to load image from Internet or file system, decode it to {@link Bitmap}, and

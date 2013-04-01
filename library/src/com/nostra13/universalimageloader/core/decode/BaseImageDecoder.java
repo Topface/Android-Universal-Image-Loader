@@ -15,22 +15,21 @@
  *******************************************************************************/
 package com.nostra13.universalimageloader.core.decode;
 
-import java.io.IOException;
-import java.io.InputStream;
-
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.BitmapFactory.Options;
 import android.graphics.Matrix;
 import android.media.ExifInterface;
 import android.os.Build;
-
 import com.nostra13.universalimageloader.core.assist.ImageScaleType;
 import com.nostra13.universalimageloader.core.assist.ImageSize;
 import com.nostra13.universalimageloader.core.download.ImageDownloader.Scheme;
 import com.nostra13.universalimageloader.utils.ImageSizeUtils;
 import com.nostra13.universalimageloader.utils.IoUtils;
 import com.nostra13.universalimageloader.utils.L;
+
+import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * Decodes images to {@link Bitmap}, scales them to needed size

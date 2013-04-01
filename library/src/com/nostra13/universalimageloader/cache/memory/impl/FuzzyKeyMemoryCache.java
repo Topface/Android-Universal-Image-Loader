@@ -15,10 +15,10 @@
  *******************************************************************************/
 package com.nostra13.universalimageloader.cache.memory.impl;
 
+import com.nostra13.universalimageloader.cache.memory.MemoryCacheAware;
+
 import java.util.Collection;
 import java.util.Comparator;
-
-import com.nostra13.universalimageloader.cache.memory.MemoryCacheAware;
 
 /**
  * Decorator for {@link MemoryCacheAware}. Provides special feature for cache: some different keys are considered as

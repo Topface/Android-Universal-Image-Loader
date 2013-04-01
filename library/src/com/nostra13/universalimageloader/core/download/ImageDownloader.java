@@ -15,10 +15,10 @@
  *******************************************************************************/
 package com.nostra13.universalimageloader.core.download;
 
+import com.nostra13.universalimageloader.core.DisplayImageOptions;
+
 import java.io.IOException;
 import java.io.InputStream;
-
-import com.nostra13.universalimageloader.core.DisplayImageOptions;
 
 /**
  * Provides retrieving of {@link InputStream} of image by URI.<br />

@@ -15,12 +15,9 @@
  *******************************************************************************/
 package com.nostra13.universalimageloader.core;
 
-import java.util.concurrent.Executor;
-
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
-
 import com.nostra13.universalimageloader.cache.disc.DiscCacheAware;
 import com.nostra13.universalimageloader.cache.disc.impl.UnlimitedDiscCache;
 import com.nostra13.universalimageloader.cache.disc.naming.FileNameGenerator;
@@ -33,6 +30,8 @@ import com.nostra13.universalimageloader.core.download.ImageDownloader;
 import com.nostra13.universalimageloader.core.download.NetworkDeniedImageDownloader;
 import com.nostra13.universalimageloader.core.download.SlowNetworkImageDownloader;
 import com.nostra13.universalimageloader.utils.L;
+
+import java.util.concurrent.Executor;
 
 /**
  * Presents configuration for {@link ImageLoader}

@@ -15,13 +15,12 @@
  *******************************************************************************/
 package com.nostra13.universalimageloader.core;
 
-import java.util.concurrent.locks.ReentrantLock;
-
 import android.widget.ImageView;
-
 import com.nostra13.universalimageloader.core.assist.ImageLoadingListener;
 import com.nostra13.universalimageloader.core.assist.ImageSize;
 import com.nostra13.universalimageloader.core.assist.MemoryCacheUtil;
+
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Information for load'n'display image task

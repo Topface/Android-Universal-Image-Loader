@@ -15,10 +15,9 @@
  *******************************************************************************/
 package com.nostra13.universalimageloader.core.decode;
 
-import java.io.IOException;
-
-
 import android.graphics.Bitmap;
+
+import java.io.IOException;
 
 /**
  * Provide decoding image to result {@link Bitmap}.

@@ -15,6 +15,9 @@
  *******************************************************************************/
 package com.nostra13.universalimageloader.cache.disc;
 
+import com.nostra13.universalimageloader.cache.disc.naming.FileNameGenerator;
+import com.nostra13.universalimageloader.core.DefaultConfigurationFactory;
+
 import java.io.File;
 import java.util.Collections;
 import java.util.HashMap;
@@ -22,9 +25,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import com.nostra13.universalimageloader.cache.disc.naming.FileNameGenerator;
-import com.nostra13.universalimageloader.core.DefaultConfigurationFactory;
 
 /**
  * Abstract disc cache limited by some parameter. If cache exceeds specified limit then file with the most oldest last

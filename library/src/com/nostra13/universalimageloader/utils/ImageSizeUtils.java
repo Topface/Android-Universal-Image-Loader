@@ -15,15 +15,14 @@
  *******************************************************************************/
 package com.nostra13.universalimageloader.utils;
 
-import java.lang.reflect.Field;
-
 import android.graphics.BitmapFactory;
 import android.util.DisplayMetrics;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.ImageView;
-
 import com.nostra13.universalimageloader.core.assist.ImageSize;
 import com.nostra13.universalimageloader.core.assist.ViewScaleType;
+
+import java.lang.reflect.Field;
 
 /**
  * Provides calculations with image sizes, scales

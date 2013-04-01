@@ -18,7 +18,6 @@ package com.nostra13.universalimageloader.core.decode;
 import android.annotation.TargetApi;
 import android.graphics.BitmapFactory.Options;
 import android.os.Build;
-
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.assist.ImageScaleType;
 import com.nostra13.universalimageloader.core.assist.ImageSize;
