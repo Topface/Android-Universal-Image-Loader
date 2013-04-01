@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2011-2013 Sergey Tarasevich
+ * Copyright 2013 Sergey Tarasevich
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,26 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package com.nostra13.universalimageloader.cache.memory.impl;
+package com.nostra13.universalimageloader.core.decode;
 
-import java.lang.ref.Reference;
-import java.lang.ref.WeakReference;
+import java.io.IOException;
+
 
 import android.graphics.Bitmap;
 
-import com.nostra13.universalimageloader.cache.memory.BaseMemoryCache;
-
 /**
- * Memory cache with {@linkplain WeakReference weak references} to {@linkplain android.graphics.Bitmap bitmaps}<br />
- * <br />
- * <b>NOTE:</b> This cache uses only weak references for stored Bitmaps.
+ * Provide decoding image to result {@link Bitmap}.
  * 
  * @author Sergey Tarasevich (nostra13[at]gmail[dot]com)
- * @since 1.5.3
+ * @since 1.8.3
+ * @see ImageDecodingInfo
  */
-public class WeakMemoryCache extends BaseMemoryCache<String, Bitmap> {
-	@Override
-	protected Reference<Bitmap> createReference(Bitmap value) {
-		return new WeakReference<Bitmap>(value);
-	}
+public interface ImageDecoder {
+
+	/**
+	 * Decodes image to {@link Bitmap} according target size and other parameters.
+	 * 
+	 * @param imageDecodingInfo 
+	 * @return
+	 * @throws IOException
+	 */
+	Bitmap decode(ImageDecodingInfo imageDecodingInfo) throws IOException;
 }

@@ -17,7 +17,6 @@ package com.nostra13.universalimageloader.core.download;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
 
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 
@@ -29,15 +28,6 @@ import com.nostra13.universalimageloader.core.DisplayImageOptions;
  * @since 1.4.0
  */
 public interface ImageDownloader {
-
-	/// Supported URI schemes(protocols)
-	String SCHEME_HTTP = "http";
-	String SCHEME_HTTPS = "https";
-	String SCHEME_FILE = "file";
-	String SCHEME_CONTENT = "content";
-	String SCHEME_ASSETS = "assets";
-	String SCHEME_DRAWABLE = "drawable";
-
 	/**
 	 * Retrieves {@link InputStream} of image by URI.
 	 * 
@@ -48,5 +38,52 @@ public interface ImageDownloader {
 	 * @throws IOException if some I/O error occurs during getting image stream
 	 * @throws UnsupportedOperationException if image URI has unsupported scheme(protocol)
 	 */
-	InputStream getStream(URI imageUri, Object extra) throws IOException;
+	InputStream getStream(String imageUri, Object extra) throws IOException;
+
+	/** Represents supported schemes(protocols) of URI. Provides convenient methods for work with schemes and URIs. */
+	public enum Scheme {
+		HTTP("http"), HTTPS("https"), FILE("file"), CONTENT("content"), ASSETS("assets"), DRAWABLE("drawable"), UNKNOWN("");
+
+		private String scheme;
+		private String uriPrefix;
+
+		Scheme(String scheme) {
+			this.scheme = scheme;
+			uriPrefix = scheme + "://";
+		}
+
+		/**
+		 * Defines scheme of incoming URI
+		 * 
+		 * @param uri URI for scheme detection
+		 * @return Scheme of incoming URI
+		 */
+		public static Scheme ofUri(String uri) {
+			if (uri != null) {
+				for (Scheme s : values()) {
+					if (s.belongsTo(uri)) {
+						return s;
+					}
+				}
+			}
+			return UNKNOWN;
+		}
+
+		private boolean belongsTo(String uri) {
+			return uri.startsWith(uriPrefix);
+		}
+
+		/** Appends scheme to incoming path */
+		public String wrap(String path) {
+			return uriPrefix + path;
+		}
+
+		/** Removed scheme part ("scheme://") from incoming URI */
+		public String crop(String uri) {
+			if (!belongsTo(uri)) {
+				throw new IllegalArgumentException(String.format("URI [%1$s] doesn't have expected scheme [%2$s]", uri, scheme));
+			}
+			return uri.substring(uriPrefix.length());
+		}
+	}
 }

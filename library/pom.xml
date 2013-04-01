@@ -10,18 +10,20 @@
 	<parent>
 		<groupId>com.nostra13.universalimageloader</groupId>
 		<artifactId>parent</artifactId>
-		<version>1.8.1-SNAPSHOT</version>
+		<version>1.8.4-SNAPSHOT</version>
 	</parent>
 
 	<dependencies>
 		<dependency>
 			<groupId>com.google.android</groupId>
 			<artifactId>android</artifactId>
-		</dependency>
+			<scope>provided</scope>
+        </dependency>
 	</dependencies>
 
 	<build>
-		<plugins>
+		<sourceDirectory>src</sourceDirectory>
+        <plugins>
 			<plugin>
 				<groupId>com.jayway.maven.plugins.android.generation2</groupId>
 				<artifactId>android-maven-plugin</artifactId>

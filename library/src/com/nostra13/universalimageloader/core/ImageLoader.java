@@ -17,16 +17,21 @@ package com.nostra13.universalimageloader.core;
 
 import android.graphics.Bitmap;
 import android.os.Handler;
-import android.util.DisplayMetrics;
 import android.view.View;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.ImageView;
 import android.widget.ImageView.ScaleType;
 import com.nostra13.universalimageloader.cache.disc.DiscCacheAware;
 import com.nostra13.universalimageloader.cache.memory.MemoryCacheAware;
-import com.nostra13.universalimageloader.core.assist.*;
+import com.nostra13.universalimageloader.core.assist.FailReason;
+import com.nostra13.universalimageloader.core.assist.FlushedInputStream;
+import com.nostra13.universalimageloader.core.assist.ImageLoadingListener;
+import com.nostra13.universalimageloader.core.assist.ImageSize;
+import com.nostra13.universalimageloader.core.assist.MemoryCacheUtil;
+import com.nostra13.universalimageloader.core.assist.SimpleImageLoadingListener;
 import com.nostra13.universalimageloader.core.display.BitmapDisplayer;
 import com.nostra13.universalimageloader.core.display.FakeBitmapDisplayer;
+import com.nostra13.universalimageloader.utils.ImageSizeUtils;
 import com.nostra13.universalimageloader.utils.L;
 
 import java.lang.reflect.Field;
@@ -42,6 +47,8 @@ public class ImageLoader {
 
 	public static final String TAG = ImageLoader.class.getSimpleName();
 
+	static final String LOG_INIT_CONFIG = "Initialize ImageLoader with configuration";
+	static final String LOG_DESTROY = "Destroy ImageLoader";
 	static final String LOG_WAITING_FOR_RESUME = "ImageLoader is paused. Waiting...  [%s]";
 	static final String LOG_RESUME_AFTER_PAUSE = ".. Resume loading [%s]";
 	static final String LOG_DELAY_BEFORE_LOADING = "Delay %d ms before loading...  [%s]";
@@ -49,10 +56,8 @@ public class ImageLoader {
 	static final String LOG_WAITING_FOR_IMAGE_LOADED = "Image already is loading. Waiting... [%s]";
 	static final String LOG_GET_IMAGE_FROM_MEMORY_CACHE_AFTER_WAITING = "...Get cached bitmap from memory after waiting. [%s]";
 	static final String LOG_LOAD_IMAGE_FROM_MEMORY_CACHE = "Load image from memory cache [%s]";
-	static final String LOG_LOAD_IMAGE_FROM_INTERNET = "Load image from Internet [%s]";
+	static final String LOG_LOAD_IMAGE_FROM_NETWORK = "Load image from network [%s]";
 	static final String LOG_LOAD_IMAGE_FROM_DISC_CACHE = "Load image from disc cache [%s]";
-	static final String LOG_IMAGE_SUBSAMPLING = "Original image (%1$dx%2$d) is going to be subsampled to %3$dx%4$d view. Computed scale size - %5$d";
-	static final String LOG_IMAGE_SCALED = "Subsampled image (%1$dx%2$d) was scaled to %3$dx%4$d";
 	static final String LOG_PREPROCESS_IMAGE = "PreProcess image before caching in memory [%s]";
 	static final String LOG_POSTPROCESS_IMAGE = "PostProcess image before displaying [%s]";
 	static final String LOG_CACHE_IMAGE_IN_MEMORY = "Cache image in memory [%s]";
@@ -60,9 +65,10 @@ public class ImageLoader {
 	static final String LOG_DISPLAY_IMAGE_IN_IMAGEVIEW = "Display image in ImageView [%s]";
 	static final String LOG_TASK_CANCELLED = "ImageView is reused for another image. Task is cancelled. [%s]";
 	static final String LOG_TASK_INTERRUPTED = "Task was interrupted [%s]";
-	static final String LOG_CANT_DECODE_IMAGE = "Image can't be decoded [%s]";
 
-	private static final String ERROR_WRONG_ARGUMENTS = "Wrong arguments were passed to displayImage() method (ImageView reference are required)";
+	private static final String WARNING_RE_INIT_CONFIG = "Try to initialize ImageLoader which had already been initialized before. "
+			+ "To re-init ImageLoader with new configuration call ImageLoader.destroy() at first.";
+	private static final String ERROR_WRONG_ARGUMENTS = "Wrong arguments were passed to displayImage() method (ImageView reference must not be null)";
 	private static final String ERROR_NOT_INIT = "ImageLoader must be init with configuration before using";
 	private static final String ERROR_INIT_CONFIG_WITH_NULL = "ImageLoader configuration can not be initialized with null";
 
@@ -90,8 +96,9 @@ public class ImageLoader {
 	}
 
 	/**
-	 * Initializes ImageLoader's singleton instance with configuration. Method should be called <b>once</b> (each
-	 * following call will have no effect)<br />
+	 * Initializes ImageLoader instance with configuration.<br />
+	 * If configurations was set before ( {@link #isInited()} == true) then this method does nothing.<br />
+	 * To force initialization with new configuration you should {@linkplain #destroy() destroy ImageLoader} at first.
 	 * 
 	 * @param configuration {@linkplain ImageLoaderConfiguration ImageLoader configuration}
 	 * @throws IllegalArgumentException if <b>configuration</b> parameter is null
@@ -101,8 +108,11 @@ public class ImageLoader {
 			throw new IllegalArgumentException(ERROR_INIT_CONFIG_WITH_NULL);
 		}
 		if (this.configuration == null) {
+			if (configuration.loggingEnabled) L.d(LOG_INIT_CONFIG);
 			engine = new ImageLoaderEngine(configuration);
 			this.configuration = configuration;
+		} else {
+			L.w(WARNING_RE_INIT_CONFIG);
 		}
 	}
 
@@ -206,7 +216,8 @@ public class ImageLoader {
 			return;
 		}
 
-		ImageSize targetSize = getImageSizeScaleTo(imageView);
+		ImageSize targetSize = ImageSizeUtils.defineTargetSizeForView(imageView, configuration.maxImageWidthForMemoryCache,
+				configuration.maxImageHeightForMemoryCache);
 		String memoryCacheKey = MemoryCacheUtil.generateKey(uri, targetSize);
 		engine.prepareDisplayTaskFor(imageView, memoryCacheKey);
 
@@ -401,17 +412,28 @@ public class ImageLoader {
 	}
 
 	/**
-	 * Denies ImageLoader to download images from network. If image isn't cached then
-	 * {@link ImageLoadingListener#onLoadingFailed(String, View, FailReason)} callback was fired with
+	 * Denies or allows ImageLoader to download images from the network.<br />
+	 * <br />
+	 * If downloads are denied and if image isn't cached then
+	 * {@link ImageLoadingListener#onLoadingFailed(String, View, FailReason)} callback will be fired with
 	 * {@link FailReason#NETWORK_DENIED}
+	 * 
+	 * @param denyNetworkDownloads pass <b>true</b> - to deny engine to download images from the network; <b>false</b> -
+	 *            to allow engine to download images from network.
 	 */
-	public void denyNetworkDownloads() {
-		engine.denyNetworkDownloads();
+	public void denyNetworkDownloads(boolean denyNetworkDownloads) {
+		engine.denyNetworkDownloads(denyNetworkDownloads);
 	}
 
-	/** Allows ImageLoader to download images from network. */
-	public void allowNetworkDownloads() {
-		engine.allowNetworkDownloads();
+	/**
+	 * Sets option whether ImageLoader will use {@link FlushedInputStream} for network downloads to handle <a
+	 * href="http://code.google.com/p/android/issues/detail?id=6066">this known problem</a> or not.
+	 * 
+	 * @param handleSlowNetwork pass <b>true</b> - to use {@link FlushedInputStream} for network downloads; <b>false</b>
+	 *            - otherwise.
+	 */
+	public void handleSlowNetwork(boolean handleSlowNetwork) {
+		engine.handleSlowNetwork(handleSlowNetwork);
 	}
 
 	/**
@@ -427,49 +449,23 @@ public class ImageLoader {
 		engine.resume();
 	}
 
-	/** Stops all running display image tasks, discards all other scheduled tasks */
+	/**
+	 * Cancels all running and scheduled display image tasks.<br />
+	 * ImageLoader still can be used after calling this method.
+	 */
 	public void stop() {
 		engine.stop();
 	}
 
 	/**
-	 * Defines image size for loading at memory (for memory economy) by {@link ImageView} parameters.<br />
-	 * Size computing algorithm:<br />
-	 * 1) Get <b>layout_width</b> and <b>layout_height</b>. If both of them haven't exact value then go to step #2.</br>
-	 * 2) Get <b>maxWidth</b> and <b>maxHeight</b>. If both of them are not set then go to step #3.<br />
-	 * 3) Get <b>maxImageWidthForMemoryCache</b> and <b>maxImageHeightForMemoryCache</b> from configuration. If both of
-	 * them are not set then go to step #3.<br />
-	 * 4) Get device screen dimensions.
+	 * {@linkplain #stop() Stops ImageLoader} and clears current configuration. <br />
+	 * You can {@linkplain #init(ImageLoaderConfiguration) init} ImageLoader with new configuration after calling this
+	 * method.
 	 */
-	private ImageSize getImageSizeScaleTo(ImageView imageView) {
-		DisplayMetrics displayMetrics = imageView.getContext().getResources().getDisplayMetrics();
-
-		LayoutParams params = imageView.getLayoutParams();
-		int width = params.width; // Get layout width parameter
-		if (width <= 0) width = getFieldValue(imageView, "mMaxWidth"); // Check maxWidth parameter
-		if (width <= 0) width = configuration.maxImageWidthForMemoryCache;
-		if (width <= 0) width = displayMetrics.widthPixels;
-
-		int height = params.height; // Get layout height parameter
-		if (height <= 0) height = getFieldValue(imageView, "mMaxHeight"); // Check maxHeight parameter
-		if (height <= 0) height = configuration.maxImageHeightForMemoryCache;
-		if (height <= 0) height = displayMetrics.heightPixels;
-
-		return new ImageSize(width, height);
-	}
-
-	private int getFieldValue(Object object, String fieldName) {
-		int value = 0;
-		try {
-			Field field = ImageView.class.getDeclaredField(fieldName);
-			field.setAccessible(true);
-			int fieldValue = (Integer) field.get(object);
-			if (fieldValue > 0 && fieldValue < Integer.MAX_VALUE) {
-				value = fieldValue;
-			}
-		} catch (Exception e) {
-			L.e(e);
-		}
-		return value;
+	public void destroy() {
+		if (configuration != null && configuration.loggingEnabled) L.d(LOG_DESTROY);
+		stop();
+		engine = null;
+		configuration = null;
 	}
 }

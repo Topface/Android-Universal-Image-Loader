@@ -1,6 +1,49 @@
 Change Log
 ===
 
+v1.8.3 *(31.03.2013)*
+---
+ * Android 2.0+ support
+ * Added EXIF orientation support ([#172](https://github.com/nostra13/Android-Universal-Image-Loader/issues/172))
+ * Introduced `ImageLoaderConfiguration.imageDecoder(ImageDecoder)`
+ * Introduced `DisplayImageOptions.decodingOptions(BitmapFactory.Options)`
+ * Handled disc cache non-availability
+ * Use `LruMemoryCache` as default memory cache for API >= 9, `LRULimitedMemoryCache` - for API < 9. Default memory cache size - 1/8 of available app memory.
+ * Improved `LimitedDiscCache` and `FuzzyKeyMemoryCache` performance
+ * Fixed bugs:
+    * `.denyCacheImageMultipleSizesInMemory` doesn't work if own memory cache is set
+	* `java.lang.NoSuchMethodError` in sample app ([#206](https://github.com/nostra13/Android-Universal-Image-Loader/issues/206))
+
+v1.8.2 *(13.03.2013)*
+---
+ * **Changed API:**
+   * `ImageDownloader.getStream***(URI, ...)` -> `ImageDownloader.getStream***(String, ...)`
+   * Made `FailReason` as a class instead of enum. Can be used in switches: `FailReason.getType()`
+   * Removed `ImageLoader.offOutOfMemoryHandling()`. ImageLoader doesn't handle OutOfMemoryError by default anymore (but still catches it for callbacks).
+ * Introduced `ImageLoader.taskExecutor(Executor)` and `ImageLoader.taskExecutorForCachedImages(Executor)` ([#187](https://github.com/nostra13/Android-Universal-Image-Loader/issues/187))
+ * Introduced `ImageLoader.destroy()`
+ * Handled SD card unmount ([#170](https://github.com/nostra13/Android-Universal-Image-Loader/issues/170))
+ * Added `Scheme` class
+ * Fixed bugs:
+   * problem of loading of local files with encoded symbols in path ([#179](https://github.com/nostra13/Android-Universal-Image-Loader/issues/179))
+   * minor mistake in `getImageSizeScaleTo()` method ([#200](https://github.com/nostra13/Android-Universal-Image-Loader/issues/200))
+   * possible concurrency issue in memory caches ([#116](https://github.com/nostra13/Android-Universal-Image-Loader/issues/116))
+   * wrong visibility of methods `ImageLoader.denyNetworkDownloads(boolean)` and `ImageLoader.handleSlowNetworks(boolean)` 
+
+v1.8.1 *(08.03.2013)*
+---
+ * **Changed API:**
+   * `ImageLoader.denyNetworkDownloads()` -> `ImageLoader.denyNetworkDownloads(true)`
+   * `ImageLoader.allowNetworkDownloads()` -> `ImageLoader.denyNetworkDownloads(false)`
+ * Introduced `ImageLoader.denyNetworkDownloads(boolean)`
+ * Introduced `ImageLoader.handleSlowNetwork(boolean)`. `FlushedInsputStream` isn't used for downloads by default.
+ * Handled HTTP(S) redirects
+ * Added `LruMemoryCache` (based on Android's LruCache), uses only strong references.
+ * Fixed `DisplayImageOptions.cloneFrom(...)` ([#173](https://github.com/nostra13/Android-Universal-Image-Loader/issues/173))
+ * Fixed ConcurrentModification issue in `MemoryCacheUtil. findCacheKeysForImageUri(...)` ([#174](https://github.com/nostra13/Android-Universal-Image-Loader/issues/174))
+ * Fixed issue "Disc Cache can't find image by URI with special/local UTF-8 characters"
+ * Improved calculation of target image size to scale (consider measured View width and height)
+
 v1.8.0 *(10.02.2013)*
 ---
  * **Changed API:**
@@ -15,7 +58,7 @@ v1.8.0 *(10.02.2013)*
  * Support of "content://", "assets://", "drawable://" URI schemes out of the box ([#162](https://github.com/nostra13/Android-Universal-Image-Loader/issues/162))
  * Introduced `DisplayImageOptions.showImageOnFail(int)`
  * Introduced `DisplayImageOptions.preProcessor(BitmapProcessor)` and `DisplayImageOptions.postProcessor(BitmapProcessor)` ([#151](https://github.com/nostra13/Android-Universal-Image-Loader/issues/151))
- * Introduced `DisplayImageOptions.extraForDownloader(Object)`, allows to pass auxiliary object which will be passed to `ImageDownloader.getStream(URI, Object)` (#150)
+ * Introduced `DisplayImageOptions.extraForDownloader(Object)`, allows to pass auxiliary object which will be passed to `ImageDownloader.getStream(URI, Object)` ([#150](https://github.com/nostra13/Android-Universal-Image-Loader/issues/150))
  * Introduced `ImageLoader.denyNetworkDownloads()` and `ImageLoader.allowNetworkDownloads()` ([#148](https://github.com/nostra13/Android-Universal-Image-Loader/issues/148))
  * Introduced `FailReason.UNSUPPORTED_URI_SCHEME` and `FailReason.NETWORK_DENIED`
  * Introduced `ImageScaleType.NONE`

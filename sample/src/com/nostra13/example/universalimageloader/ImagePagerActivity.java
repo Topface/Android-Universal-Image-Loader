@@ -39,7 +39,11 @@ import com.nostra13.universalimageloader.core.display.FadeInBitmapDisplayer;
  */
 public class ImagePagerActivity extends BaseActivity {
 
+	private static final String STATE_POSITION = "STATE_POSITION";
+
 	DisplayImageOptions options;
+
+	ViewPager pager;
 
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -49,19 +53,28 @@ public class ImagePagerActivity extends BaseActivity {
 		String[] imageUrls = bundle.getStringArray(Extra.IMAGES);
 		int pagerPosition = bundle.getInt(Extra.IMAGE_POSITION, 0);
 
+		if (savedInstanceState != null) {
+			pagerPosition = savedInstanceState.getInt(STATE_POSITION);
+		}
+
 		options = new DisplayImageOptions.Builder()
 			.showImageForEmptyUri(R.drawable.ic_empty)
 			.showImageOnFail(R.drawable.ic_error)
 			.resetViewBeforeLoading()
 			.cacheOnDisc()
-			.imageScaleType(ImageScaleType.IN_SAMPLE_INT)
+			.imageScaleType(ImageScaleType.EXACTLY)
 			.bitmapConfig(Bitmap.Config.RGB_565)
 			.displayer(new FadeInBitmapDisplayer(300))
 			.build();
 
-		ViewPager pager = (ViewPager) findViewById(R.id.pager);
+		pager = (ViewPager) findViewById(R.id.pager);
 		pager.setAdapter(new ImagePagerAdapter(imageUrls));
 		pager.setCurrentItem(pagerPosition);
+	}
+
+	@Override
+	public void onSaveInstanceState(Bundle outState) {
+		outState.putInt(STATE_POSITION, pager.getCurrentItem());
 	}
 
 	private class ImagePagerAdapter extends PagerAdapter {
@@ -103,18 +116,18 @@ public class ImagePagerActivity extends BaseActivity {
 				@Override
 				public void onLoadingFailed(String imageUri, View view, FailReason failReason) {
 					String message = null;
-					switch (failReason) {
+					switch (failReason.getType()) {
 						case IO_ERROR:
 							message = "Input/Output error";
 							break;
-						case OUT_OF_MEMORY:
-							message = "Out Of Memory error";
+						case DECODING_ERROR:
+							message = "Image can't be decoded";
 							break;
 						case NETWORK_DENIED:
 							message = "Downloads are denied";
 							break;
-						case UNSUPPORTED_URI_SCHEME:
-							message = "Unsupported URI scheme";
+						case OUT_OF_MEMORY:
+							message = "Out Of Memory error";
 							break;
 						case UNKNOWN:
 							message = "Unknown error";

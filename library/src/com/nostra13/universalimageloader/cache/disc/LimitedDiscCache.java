@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import com.nostra13.universalimageloader.cache.disc.naming.FileNameGenerator;
 import com.nostra13.universalimageloader.core.DefaultConfigurationFactory;
@@ -36,9 +37,9 @@ import com.nostra13.universalimageloader.core.DefaultConfigurationFactory;
  */
 public abstract class LimitedDiscCache extends BaseDiscCache {
 
-	private int cacheSize = 0;
+	private final AtomicInteger cacheSize;
 
-	private int sizeLimit;
+	private final int sizeLimit;
 
 	private final Map<File, Long> lastUsageDates = Collections.synchronizedMap(new HashMap<File, Long>());
 
@@ -62,28 +63,35 @@ public abstract class LimitedDiscCache extends BaseDiscCache {
 	public LimitedDiscCache(File cacheDir, FileNameGenerator fileNameGenerator, int sizeLimit) {
 		super(cacheDir, fileNameGenerator);
 		this.sizeLimit = sizeLimit;
+		cacheSize = new AtomicInteger();
 		calculateCacheSizeAndFillUsageMap();
 	}
 
 	private void calculateCacheSizeAndFillUsageMap() {
-		int size = 0;
-		File[] cachedFiles = cacheDir.listFiles();
-		for (File cachedFile : cachedFiles) {
-			size += getSize(cachedFile);
-			lastUsageDates.put(cachedFile, cachedFile.lastModified());
-		}
-		cacheSize = size;
+		new Thread(new Runnable() {
+			@Override
+			public void run() {
+				int size = 0;
+				File[] cachedFiles = cacheDir.listFiles();
+				for (File cachedFile : cachedFiles) {
+					size += getSize(cachedFile);
+					lastUsageDates.put(cachedFile, cachedFile.lastModified());
+				}
+				cacheSize.set(size);
+			}
+		}).start();
 	}
 
 	@Override
 	public void put(String key, File file) {
 		int valueSize = getSize(file);
-		while (cacheSize + valueSize > sizeLimit) {
+		int curCacheSize = cacheSize.get();
+		while (curCacheSize + valueSize > sizeLimit) {
 			int freedSize = removeNext();
 			if (freedSize == 0) break; // cache is empty (have nothing to delete)
-			cacheSize -= freedSize;
+			curCacheSize = cacheSize.addAndGet(-freedSize);
 		}
-		cacheSize += valueSize;
+		cacheSize.addAndGet(valueSize);
 
 		Long currentTime = System.currentTimeMillis();
 		file.setLastModified(currentTime);
@@ -104,7 +112,7 @@ public abstract class LimitedDiscCache extends BaseDiscCache {
 	@Override
 	public void clear() {
 		lastUsageDates.clear();
-		cacheSize = 0;
+		cacheSize.set(0);
 		super.clear();
 	}
 
