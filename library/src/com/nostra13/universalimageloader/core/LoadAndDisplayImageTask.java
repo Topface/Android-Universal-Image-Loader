@@ -111,7 +111,7 @@ final class LoadAndDisplayImageTask implements Runnable {
 					log(LOG_PREPROCESS_IMAGE, memoryCacheKey);
 					bmp = options.getPreProcessor().process(bmp);
 				}
-				if (options.isCacheInMemory()) {
+				if (options.isCacheInMemory() && memoryCacheKey != null && bmp != null) {
 					log(LOG_CACHE_IMAGE_IN_MEMORY, memoryCacheKey);
 					configuration.memoryCache.put(memoryCacheKey, bmp);
 				}
