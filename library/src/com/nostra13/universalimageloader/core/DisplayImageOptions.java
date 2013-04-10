@@ -17,7 +17,10 @@ package com.nostra13.universalimageloader.core;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory.Options;
+import android.os.Handler;
 import android.widget.ImageView;
+
+import com.nostra13.universalimageloader.core.assist.ImageLoadingListener;
 import com.nostra13.universalimageloader.core.assist.ImageScaleType;
 import com.nostra13.universalimageloader.core.display.BitmapDisplayer;
 import com.nostra13.universalimageloader.core.display.SimpleBitmapDisplayer;
@@ -69,6 +72,7 @@ public final class DisplayImageOptions {
 	private final BitmapProcessor preProcessor;
 	private final BitmapProcessor postProcessor;
 	private final BitmapDisplayer displayer;
+	private final Handler handler;
 
 	private DisplayImageOptions(Builder builder) {
 		stubImage = builder.stubImage;
@@ -84,6 +88,7 @@ public final class DisplayImageOptions {
 		preProcessor = builder.preProcessor;
 		postProcessor = builder.postProcessor;
 		displayer = builder.displayer;
+		handler = builder.handler;
 	}
 
 	public boolean shouldShowStubImage() {
@@ -162,6 +167,10 @@ public final class DisplayImageOptions {
 		return displayer;
 	}
 
+	public Handler getHandler() {
+		return (handler == null ? new Handler() : handler);
+	}
+
 	/**
 	 * Builder for {@link DisplayImageOptions}
 	 * 
@@ -181,6 +190,7 @@ public final class DisplayImageOptions {
 		private BitmapProcessor preProcessor = null;
 		private BitmapProcessor postProcessor = null;
 		private BitmapDisplayer displayer = DefaultConfigurationFactory.createBitmapDisplayer();
+		private Handler handler = null;
 
 		public Builder() {
 			decodingOptions.inPurgeable = true;
@@ -255,7 +265,8 @@ public final class DisplayImageOptions {
 		/**
 		 * Sets options for image decoding.<br />
 		 * <b>NOTE:</b> {@link Options#inSampleSize} of incoming options will <b>NOT</b> be considered. Library
-		 * calculate the most appropriate sample size itself according yo {@link #imageScaleType(ImageScaleType)} options.<br />
+		 * calculate the most appropriate sample size itself according yo {@link #imageScaleType(ImageScaleType)}
+		 * options.<br />
 		 * <b>NOTE:</b> This option overlaps {@link #bitmapConfig(android.graphics.Bitmap.Config) bitmapConfig()}
 		 * option.
 		 */
@@ -304,6 +315,15 @@ public final class DisplayImageOptions {
 			return this;
 		}
 
+		/**
+		 * Sets custom {@linkplain Handler handler} for displaying images and firing {@linkplain ImageLoadingListener
+		 * listener} events.
+		 */
+		public Builder handler(Handler handler) {
+			this.handler = handler;
+			return this;
+		}
+
 		/** Sets all options equal to incoming options */
 		public Builder cloneFrom(DisplayImageOptions options) {
 			stubImage = options.stubImage;
@@ -319,6 +339,7 @@ public final class DisplayImageOptions {
 			preProcessor = options.preProcessor;
 			postProcessor = options.postProcessor;
 			displayer = options.displayer;
+			handler = options.handler;
 			return this;
 		}
 

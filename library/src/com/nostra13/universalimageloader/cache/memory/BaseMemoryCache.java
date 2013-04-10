@@ -53,7 +53,9 @@ public abstract class BaseMemoryCache<K, V> implements MemoryCacheAware<K, V> {
 
 	@Override
 	public Collection<K> keys() {
-		return new HashSet<K>(softMap.keySet());
+		synchronized (softMap) {
+			return new HashSet<K>(softMap.keySet());
+		}
 	}
 
 	@Override
