@@ -72,14 +72,16 @@ public abstract class LimitedDiscCache extends BaseDiscCache {
 			@Override
 			public void run() {
 				int size = 0;
-				File[] cachedFiles = cacheDir.listFiles();
-				if (cachedFiles != null) { // rarely but it can happen, don't know why
-					for (File cachedFile : cachedFiles) {
-						size += getSize(cachedFile);
-						lastUsageDates.put(cachedFile, cachedFile.lastModified());
-					}
-					cacheSize.set(size);
-				}
+                if (cacheDir != null) {
+                    File[] cachedFiles = cacheDir.listFiles();
+                    if (cachedFiles != null) { // rarely but it can happen, don't know why
+                        for (File cachedFile : cachedFiles) {
+                            size += getSize(cachedFile);
+                            lastUsageDates.put(cachedFile, cachedFile.lastModified());
+                        }
+                        cacheSize.set(size);
+                    }
+                }
 			}
 		}).start();
 	}
