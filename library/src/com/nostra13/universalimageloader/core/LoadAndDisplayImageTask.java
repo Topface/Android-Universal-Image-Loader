@@ -30,6 +30,14 @@ import android.widget.ImageView;
 import com.nostra13.universalimageloader.cache.disc.DiscCacheAware;
 import com.nostra13.universalimageloader.core.assist.*;
 import com.nostra13.universalimageloader.core.assist.FailReason.FailType;
+<<<<<<< HEAD
+=======
+import com.nostra13.universalimageloader.core.assist.ImageLoadingListener;
+import com.nostra13.universalimageloader.core.assist.ImageScaleType;
+import com.nostra13.universalimageloader.core.assist.ImageSize;
+import com.nostra13.universalimageloader.core.assist.LoadedFrom;
+import com.nostra13.universalimageloader.core.assist.ViewScaleType;
+>>>>>>> 665c3de2d458eadaebcb862b13ce6274b699f874
 import com.nostra13.universalimageloader.core.decode.ImageDecoder;
 import com.nostra13.universalimageloader.core.decode.ImageDecodingInfo;
 import com.nostra13.universalimageloader.core.download.ImageDownloader;
@@ -86,6 +94,8 @@ final class LoadAndDisplayImageTask implements Runnable {
 	final DisplayImageOptions options;
 	final ImageLoadingListener listener;
 
+	private LoadedFrom loadedFrom = LoadedFrom.NETWORK;
+
 	public LoadAndDisplayImageTask(ImageLoaderEngine engine, ImageLoadingInfo imageLoadingInfo, Handler handler) {
 		this.engine = engine;
 		this.imageLoadingInfo = imageLoadingInfo;
@@ -141,6 +151,7 @@ final class LoadAndDisplayImageTask implements Runnable {
 					configuration.memoryCache.put(memoryCacheKey, bmp);
 				}
 			} else {
+				loadedFrom = LoadedFrom.MEMORY_CACHE;
 				log(LOG_GET_IMAGE_FROM_MEMORY_CACHE_AFTER_WAITING);
 			}
 
@@ -157,7 +168,7 @@ final class LoadAndDisplayImageTask implements Runnable {
 
 		if (checkTaskIsNotActual() || checkTaskIsInterrupted()) return;
 
-		DisplayBitmapTask displayBitmapTask = new DisplayBitmapTask(bmp, imageLoadingInfo, engine);
+		DisplayBitmapTask displayBitmapTask = new DisplayBitmapTask(bmp, imageLoadingInfo, engine, loadedFrom);
 		displayBitmapTask.setLoggingEnabled(loggingEnabled);
 		handler.post(displayBitmapTask);
 	}
@@ -235,11 +246,13 @@ final class LoadAndDisplayImageTask implements Runnable {
 			if (imageFile.exists()) {
 				log(LOG_LOAD_IMAGE_FROM_DISC_CACHE);
 
+				loadedFrom = LoadedFrom.DISC_CACHE;
 				bitmap = decodeImage(Scheme.FILE.wrap(imageFile.getAbsolutePath()));
 			}
 			if (bitmap == null || bitmap.getWidth() <= 0 || bitmap.getHeight() <= 0) {
 				log(LOG_LOAD_IMAGE_FROM_NETWORK);
 
+				loadedFrom = LoadedFrom.NETWORK;
 				String imageUriForDecoding = options.isCacheOnDisc() ? tryCacheImageOnDisc(imageFile) : uri;
 				if (!checkTaskIsNotActual()) {
 					bitmap = decodeImage(imageUriForDecoding);
@@ -273,7 +286,7 @@ final class LoadAndDisplayImageTask implements Runnable {
 		if (cacheDir == null || (!cacheDir.exists() && !cacheDir.mkdirs())) {
 			imageFile = configuration.reserveDiscCache.get(uri);
 			cacheDir = imageFile.getParentFile();
-			if (cacheDir == null || !cacheDir.exists()) {
+			if (cacheDir != null && !cacheDir.exists()) {
 				cacheDir.mkdirs();
 			}
 		}

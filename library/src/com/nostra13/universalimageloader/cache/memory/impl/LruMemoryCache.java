@@ -120,7 +120,9 @@ public class LruMemoryCache implements MemoryCacheAware<String, Bitmap> {
 
 	@Override
 	public Collection<String> keys() {
-		return new HashSet<String>(map.keySet());
+		synchronized (this) {
+			return new HashSet<String>(map.keySet());
+		}
 	}
 
 	@Override
