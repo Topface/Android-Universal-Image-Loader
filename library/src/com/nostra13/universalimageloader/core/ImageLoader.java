@@ -23,7 +23,13 @@ import android.widget.ImageView;
 import android.widget.ImageView.ScaleType;
 import com.nostra13.universalimageloader.cache.disc.DiscCacheAware;
 import com.nostra13.universalimageloader.cache.memory.MemoryCacheAware;
-import com.nostra13.universalimageloader.core.assist.*;
+import com.nostra13.universalimageloader.core.assist.FailReason;
+import com.nostra13.universalimageloader.core.assist.FlushedInputStream;
+import com.nostra13.universalimageloader.core.assist.ImageLoadingListener;
+import com.nostra13.universalimageloader.core.assist.ImageSize;
+import com.nostra13.universalimageloader.core.assist.LoadedFrom;
+import com.nostra13.universalimageloader.core.assist.MemoryCacheUtil;
+import com.nostra13.universalimageloader.core.assist.SimpleImageLoadingListener;
 import com.nostra13.universalimageloader.core.display.BitmapDisplayer;
 import com.nostra13.universalimageloader.core.display.FakeBitmapDisplayer;
 import com.nostra13.universalimageloader.utils.ImageSizeUtils;
@@ -210,7 +216,7 @@ public class ImageLoader {
 				ProcessAndDisplayImageTask displayTask = new ProcessAndDisplayImageTask(engine, bmp, imageLoadingInfo, options.getHandler());
 				engine.submit(displayTask);
 			} else {
-				options.getDisplayer().display(bmp, imageView);
+				options.getDisplayer().display(bmp, imageView, LoadedFrom.MEMORY_CACHE);
 				listener.onLoadingComplete(uri, imageView, bmp);
 			}
 		} else {
