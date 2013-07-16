@@ -23,7 +23,7 @@ import java.io.InputStream;
 /**
  * Decorator. Handles <a href="http://code.google.com/p/android/issues/detail?id=6066">this problem</a> on slow networks
  * using {@link FlushedInputStream}.
- * 
+ *
  * @author Sergey Tarasevich (nostra13[at]gmail[dot]com)
  * @since 1.8.1
  */

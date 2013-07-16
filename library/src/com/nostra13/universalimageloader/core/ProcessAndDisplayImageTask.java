@@ -18,7 +18,6 @@ package com.nostra13.universalimageloader.core;
 import android.graphics.Bitmap;
 import android.os.Handler;
 import android.widget.ImageView;
-
 import com.nostra13.universalimageloader.core.assist.LoadedFrom;
 import com.nostra13.universalimageloader.core.process.BitmapProcessor;
 import com.nostra13.universalimageloader.utils.L;
@@ -26,7 +25,7 @@ import com.nostra13.universalimageloader.utils.L;
 /**
  * Presents process'n'display image task. Processes image {@linkplain Bitmap} and display it in {@link ImageView} using
  * {@link DisplayBitmapTask}.
- * 
+ *
  * @author Sergey Tarasevich (nostra13[at]gmail[dot]com)
  * @since 1.8.0
  */
@@ -48,7 +47,7 @@ class ProcessAndDisplayImageTask implements Runnable {
 
 	@Override
 	public void run() {
-		if (engine.configuration.loggingEnabled) L.i(LOG_POSTPROCESS_IMAGE, imageLoadingInfo.memoryCacheKey);
+		if (engine.configuration.writeLogs) L.d(LOG_POSTPROCESS_IMAGE, imageLoadingInfo.memoryCacheKey);
 		BitmapProcessor processor = imageLoadingInfo.options.getPostProcessor();
 		final Bitmap processedBitmap = processor.process(bitmap);
 		handler.post(new DisplayBitmapTask(processedBitmap, imageLoadingInfo, engine, LoadedFrom.MEMORY_CACHE));

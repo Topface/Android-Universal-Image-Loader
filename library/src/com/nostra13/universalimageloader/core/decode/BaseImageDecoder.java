@@ -33,10 +33,10 @@ import java.io.InputStream;
 
 /**
  * Decodes images to {@link Bitmap}, scales them to needed size
- * 
+ *
  * @author Sergey Tarasevich (nostra13[at]gmail[dot]com)
- * @since 1.8.3
  * @see ImageDecodingInfo
+ * @since 1.8.3
  */
 public class BaseImageDecoder implements ImageDecoder {
 
@@ -45,12 +45,12 @@ public class BaseImageDecoder implements ImageDecoder {
 	protected static final String LOG_ROTATE_IMAGE = "Rotate image on %1$d\u00B0 [%2$s]";
 	protected static final String LOG_FLIP_IMAGE = "Flip image horizontally [%s]";
 	protected static final String ERROR_CANT_DECODE_IMAGE = "Image can't be decoded [%s]";
+	protected final boolean loggingEnabled;
 
-	protected boolean loggingEnabled;
-
-	public BaseImageDecoder() {
-	}
-
+	/**
+	 * @param loggingEnabled Whether debug logs will be written to LogCat.
+	 *                       Usually should match {@link com.nostra13.universalimageloader.core.ImageLoaderConfiguration.Builder#writeDebugLogs() ImageLoaderConfiguration.writeDebugLogs()}
+	 */
 	public BaseImageDecoder(boolean loggingEnabled) {
 		this.loggingEnabled = loggingEnabled;
 	}
@@ -58,11 +58,10 @@ public class BaseImageDecoder implements ImageDecoder {
 	/**
 	 * Decodes image from URI into {@link Bitmap}. Image is scaled close to incoming {@linkplain ImageSize target size}
 	 * during decoding (depend on incoming parameters).
-	 * 
+	 *
 	 * @param decodingInfo Needed data for decoding image
-	 * 
 	 * @return Decoded bitmap
-	 * @throws IOException if some I/O exception occurs during image reading
+	 * @throws IOException                   if some I/O exception occurs during image reading
 	 * @throws UnsupportedOperationException if image URI has unsupported scheme(protocol)
 	 */
 	public Bitmap decode(ImageDecodingInfo decodingInfo) throws IOException {
@@ -145,7 +144,7 @@ public class BaseImageDecoder implements ImageDecoder {
 			boolean powerOf2 = scaleType == ImageScaleType.IN_SAMPLE_POWER_OF_2;
 			scale = ImageSizeUtils.computeImageSampleSize(imageSize, targetSize, decodingInfo.getViewScaleType(), powerOf2);
 
-			if (loggingEnabled) L.i(LOG_SABSAMPLE_IMAGE, imageSize, imageSize.scaleDown(scale), scale, decodingInfo.getImageKey());
+			if (loggingEnabled) L.d(LOG_SABSAMPLE_IMAGE, imageSize, imageSize.scaleDown(scale), scale, decodingInfo.getImageKey());
 		}
 		Options decodingOptions = decodingInfo.getDecodingOptions();
 		decodingOptions.inSampleSize = scale;
@@ -166,25 +165,24 @@ public class BaseImageDecoder implements ImageDecoder {
 		ImageScaleType scaleType = decodingInfo.getImageScaleType();
 		if (scaleType == ImageScaleType.EXACTLY || scaleType == ImageScaleType.EXACTLY_STRETCHED) {
 			ImageSize srcSize = new ImageSize(subsampledBitmap.getWidth(), subsampledBitmap.getHeight(), rotation);
-			float scale = ImageSizeUtils.computeImageScale(srcSize, decodingInfo.getTargetSize(), decodingInfo.getViewScaleType(),
-					scaleType == ImageScaleType.EXACTLY_STRETCHED);
+			float scale = ImageSizeUtils.computeImageScale(srcSize, decodingInfo.getTargetSize(), decodingInfo.getViewScaleType(), scaleType == ImageScaleType.EXACTLY_STRETCHED);
 			if (Float.compare(scale, 1f) != 0) {
 				m.setScale(scale, scale);
 
-				if (loggingEnabled) L.i(LOG_SCALE_IMAGE, srcSize, srcSize.scale(scale), scale, decodingInfo.getImageKey());
+				if (loggingEnabled) L.d(LOG_SCALE_IMAGE, srcSize, srcSize.scale(scale), scale, decodingInfo.getImageKey());
 			}
 		}
 		// Flip bitmap if need
 		if (flipHorizontal) {
 			m.postScale(-1, 1);
 
-			if (loggingEnabled) L.i(LOG_FLIP_IMAGE, decodingInfo.getImageKey());
+			if (loggingEnabled) L.d(LOG_FLIP_IMAGE, decodingInfo.getImageKey());
 		}
 		// Rotate bitmap if need
 		if (rotation != 0) {
 			m.postRotate(rotation);
 
-			if (loggingEnabled) L.i(LOG_ROTATE_IMAGE, rotation, decodingInfo.getImageKey());
+			if (loggingEnabled) L.d(LOG_ROTATE_IMAGE, rotation, decodingInfo.getImageKey());
 		}
 
 		Bitmap finalBitmap = Bitmap.createBitmap(subsampledBitmap, 0, 0, subsampledBitmap.getWidth(), subsampledBitmap.getHeight(), m, true);
@@ -192,10 +190,6 @@ public class BaseImageDecoder implements ImageDecoder {
 			subsampledBitmap.recycle();
 		}
 		return finalBitmap;
-	}
-
-	public void setLoggingEnabled(boolean loggingEnabled) {
-		this.loggingEnabled = loggingEnabled;
 	}
 
 	protected static class ExifInfo {

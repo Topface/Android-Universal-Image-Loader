@@ -28,10 +28,10 @@ import java.util.concurrent.atomic.AtomicInteger;
  * <br />
  * <b>NOTE:</b> This cache uses strong and weak references for stored Bitmaps. Strong references - for limited count of
  * Bitmaps (depends on cache size), weak references - for all other cached Bitmaps.
- * 
+ *
  * @author Sergey Tarasevich (nostra13[at]gmail[dot]com)
- * @since 1.0.0
  * @see BaseMemoryCache
+ * @since 1.0.0
  */
 public abstract class LimitedMemoryCache<K, V> extends BaseMemoryCache<K, V> {
 
@@ -49,9 +49,7 @@ public abstract class LimitedMemoryCache<K, V> extends BaseMemoryCache<K, V> {
 	 */
 	private final List<V> hardCache = Collections.synchronizedList(new LinkedList<V>());
 
-	/**
-	 * @param sizeLimit Maximum size for cache (in bytes)
-	 */
+	/** @param sizeLimit Maximum size for cache (in bytes) */
 	public LimitedMemoryCache(int sizeLimit) {
 		this.sizeLimit = sizeLimit;
 		cacheSize = new AtomicInteger();

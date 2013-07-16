@@ -43,7 +43,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Factory for providing of default options for {@linkplain ImageLoaderConfiguration configuration}
- * 
+ *
  * @author Sergey Tarasevich (nostra13[at]gmail[dot]com)
  * @since 1.5.6
  */
@@ -61,7 +61,7 @@ public class DefaultConfigurationFactory {
 		return new HashCodeFileNameGenerator();
 	}
 
-	/** Creates default implementation of {@link DisckCacheAware} depends on incoming parameters */
+	/** Creates default implementation of {@link DiscCacheAware} depends on incoming parameters */
 	public static DiscCacheAware createDiscCache(Context context, FileNameGenerator discCacheFileNameGenerator, int discCacheSize, int discCacheFileCount) {
 		if (discCacheSize > 0) {
 			File individualCacheDir = StorageUtils.getIndividualCacheDirectory(context);

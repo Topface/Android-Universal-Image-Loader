@@ -22,20 +22,24 @@ import com.nostra13.universalimageloader.core.assist.MemoryCacheUtil;
 
 import java.util.concurrent.locks.ReentrantLock;
 
+import java.lang.ref.Reference;
+import java.lang.ref.WeakReference;
+import java.util.concurrent.locks.ReentrantLock;
+
 /**
  * Information for load'n'display image task
- * 
+ *
  * @author Sergey Tarasevich (nostra13[at]gmail[dot]com)
- * @since 1.3.1
  * @see MemoryCacheUtil
  * @see DisplayImageOptions
  * @see ImageLoadingListener
+ * @since 1.3.1
  */
 final class ImageLoadingInfo {
 
 	final String uri;
 	final String memoryCacheKey;
-	final ImageView imageView;
+	final Reference<ImageView> imageViewRef;
 	final ImageSize targetSize;
 	final DisplayImageOptions options;
 	final ImageLoadingListener listener;
@@ -43,7 +47,7 @@ final class ImageLoadingInfo {
 
 	public ImageLoadingInfo(String uri, ImageView imageView, ImageSize targetSize, String memoryCacheKey, DisplayImageOptions options, ImageLoadingListener listener, ReentrantLock loadFromUriLock) {
 		this.uri = uri;
-		this.imageView = imageView;
+		this.imageViewRef = new WeakReference<ImageView>(imageView);
 		this.targetSize = targetSize;
 		this.options = options;
 		this.listener = listener;

@@ -25,7 +25,7 @@ import java.util.Comparator;
  * equals (using {@link Comparator comparator}). And when you try to put some value into cache by key so entries with
  * "equals" keys will be removed from cache before.<br />
  * <b>NOTE:</b> Used for internal needs. Normally you don't need to use this class.
- * 
+ *
  * @author Sergey Tarasevich (nostra13[at]gmail[dot]com)
  * @since 1.0.0
  */

@@ -15,11 +15,11 @@
  *******************************************************************************/
 package com.nostra13.example.universalimageloader;
 
+import android.annotation.TargetApi;
 import android.app.Application;
 import android.content.Context;
 import android.os.Build;
 import android.os.StrictMode;
-
 import com.nostra13.example.universalimageloader.Constants.Config;
 import com.nostra13.universalimageloader.cache.disc.naming.Md5FileNameGenerator;
 import com.nostra13.universalimageloader.core.ImageLoader;
@@ -30,6 +30,7 @@ import com.nostra13.universalimageloader.core.assist.QueueProcessingType;
  * @author Sergey Tarasevich (nostra13[at]gmail[dot]com)
  */
 public class UILApplication extends Application {
+	@TargetApi(Build.VERSION_CODES.GINGERBREAD)
 	@SuppressWarnings("unused")
 	@Override
 	public void onCreate() {
@@ -44,7 +45,7 @@ public class UILApplication extends Application {
 	}
 
 	public static void initImageLoader(Context context) {
-		// This configuration tuning is custom. You can tune every option, you may tune some of them, 
+		// This configuration tuning is custom. You can tune every option, you may tune some of them,
 		// or you can create default configuration by
 		//  ImageLoaderConfiguration.createDefault(this);
 		// method.
@@ -53,7 +54,7 @@ public class UILApplication extends Application {
 				.denyCacheImageMultipleSizesInMemory()
 				.discCacheFileNameGenerator(new Md5FileNameGenerator())
 				.tasksProcessingOrder(QueueProcessingType.LIFO)
-				.enableLogging() // Not necessary in common
+				.writeDebugLogs() // Remove for release app
 				.build();
 		// Initialize ImageLoader with configuration.
 		ImageLoader.getInstance().init(config);
