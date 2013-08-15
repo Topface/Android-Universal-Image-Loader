@@ -184,7 +184,7 @@ public class ImageLoader {
 			if (options.shouldShowImageForEmptyUri()) {
 				imageView.setImageResource(options.getImageForEmptyUri());
 			} else {
-				imageView.setImageDrawable(null);
+				imageView.setImageBitmap(null);
 			}
 			listener.onLoadingComplete(uri, imageView, null);
 			return;
