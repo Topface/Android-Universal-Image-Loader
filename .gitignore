@@ -1,6 +1,7 @@
 # Android generated
 bin/
 gen/
+/build
 
 # Ant
 build.xml
