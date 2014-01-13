@@ -22,8 +22,17 @@ import android.graphics.Bitmap.CompressFormat;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
+import com.nostra13.universalimageloader.core.assist.ContentLengthInputStream;
+import com.nostra13.universalimageloader.utils.IoUtils;
 
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
@@ -99,27 +108,36 @@ public class BaseImageDownloader implements ImageDownloader {
 	 *                     URL.
 	 */
 	protected InputStream getStreamFromNetwork(String imageUri, Object extra) throws IOException {
-		HttpURLConnection conn = createConnection(imageUri);
+		HttpURLConnection conn = createConnection(imageUri, extra);
 
 		int redirectCount = 0;
 		while (conn.getResponseCode() / 100 == 3 && redirectCount < MAX_REDIRECT_COUNT) {
-			conn = createConnection(conn.getHeaderField("Location"));
+			conn = createConnection(conn.getHeaderField("Location"), extra);
 			redirectCount++;
 		}
 
-		return new BufferedInputStream(conn.getInputStream(), BUFFER_SIZE);
+		InputStream imageStream;
+		try {
+			imageStream = conn.getInputStream();
+		} catch (IOException e) {
+			// Read all data to allow reuse connection (http://bit.ly/1ad35PY)
+			IoUtils.readAndCloseStream(conn.getErrorStream());
+			throw e;
+		}
+		return new ContentLengthInputStream(new BufferedInputStream(imageStream, BUFFER_SIZE), conn.getContentLength());
 	}
 
 	/**
 	 * Create {@linkplain HttpURLConnection HTTP connection} for incoming URL
 	 *
-	 * @param url URL to connect to
-	 * @return {@linkplain HttpURLConnection Connection} for incoming URL. Connection isn't established so it still
-	 *         configurable.
+	 * @param url   URL to connect to
+	 * @param extra Auxiliary object which was passed to {@link DisplayImageOptions.Builder#extraForDownloader(Object)
+	 *              DisplayImageOptions.extraForDownloader(Object)}; can be null
+	 * @return {@linkplain HttpURLConnection Connection} for incoming URL. Connection isn't established so it still configurable.
 	 * @throws IOException if some I/O error occurs during network request or if no InputStream could be created for
 	 *                     URL.
 	 */
-	protected HttpURLConnection createConnection(String url) throws IOException {
+	protected HttpURLConnection createConnection(String url, Object extra) throws IOException {
 		String encodedUrl = Uri.encode(url, ALLOWED_URI_CHARS);
 		HttpURLConnection conn = (HttpURLConnection) new URL(encodedUrl).openConnection();
 		conn.setConnectTimeout(connectTimeout);
@@ -138,7 +156,8 @@ public class BaseImageDownloader implements ImageDownloader {
 	 */
 	protected InputStream getStreamFromFile(String imageUri, Object extra) throws IOException {
 		String filePath = Scheme.FILE.crop(imageUri);
-		return new BufferedInputStream(new FileInputStream(filePath), BUFFER_SIZE);
+		return new ContentLengthInputStream(new BufferedInputStream(new FileInputStream(filePath), BUFFER_SIZE),
+				new File(filePath).length());
 	}
 
 	/**
