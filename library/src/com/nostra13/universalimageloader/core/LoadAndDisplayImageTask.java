@@ -52,7 +52,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * @see ImageLoadingInfo
  * @since 1.3.1
  */
-final class LoadAndDisplayImageTask implements Runnable, IoUtils.CopyListener {
+class LoadAndDisplayImageTask implements Runnable, IoUtils.CopyListener {
 
 	private static final String LOG_WAITING_FOR_RESUME = "ImageLoader is paused. Waiting...  [%s]";
 	private static final String LOG_RESUME_AFTER_PAUSE = ".. Resume loading [%s]";
@@ -76,7 +76,7 @@ final class LoadAndDisplayImageTask implements Runnable, IoUtils.CopyListener {
 	private static final String ERROR_POST_PROCESSOR_NULL = "Post-processor returned null [%s]";
 	private static final String ERROR_PROCESSOR_FOR_DISC_CACHE_NULL = "Bitmap processor for disc cache returned null [%s]";
 
-	private static final int BUFFER_SIZE = 32 * 1024; // 32 Kb
+	protected static final int BUFFER_SIZE = 32 * 1024; // 32 Kb
 
 	private final ImageLoaderEngine engine;
 	private final ImageLoadingInfo imageLoadingInfo;
@@ -311,7 +311,7 @@ final class LoadAndDisplayImageTask implements Runnable, IoUtils.CopyListener {
 		return loaded;
 	}
 
-	private boolean downloadImage(File targetFile) throws IOException {
+	protected boolean downloadImage(File targetFile) throws IOException {
 		InputStream is = getDownloader().getStream(uri, options.getExtraForDownloader());
 		boolean loaded;
 		try {
@@ -400,7 +400,7 @@ final class LoadAndDisplayImageTask implements Runnable, IoUtils.CopyListener {
 		runTask(r, false, handler);
 	}
 
-	private ImageDownloader getDownloader() {
+	protected ImageDownloader getDownloader() {
 		ImageDownloader d;
 		if (engine.isNetworkDenied()) {
 			d = networkDeniedDownloader;

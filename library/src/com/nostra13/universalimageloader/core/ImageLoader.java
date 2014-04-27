@@ -259,8 +259,7 @@ public class ImageLoader {
 
 			ImageLoadingInfo imageLoadingInfo = new ImageLoadingInfo(uri, imageAware, targetSize, memoryCacheKey,
 					options, listener, progressListener, engine.getLockForUri(uri));
-			LoadAndDisplayImageTask displayTask = new LoadAndDisplayImageTask(engine, imageLoadingInfo,
-					defineHandler(options));
+			LoadAndDisplayImageTask displayTask = createLoadAndDisplayImageTask(options, imageLoadingInfo);
 			if (options.isSyncLoading()) {
 				displayTask.run();
 			} else {
@@ -269,7 +268,16 @@ public class ImageLoader {
 		}
 	}
 
-	/**
+    protected LoadAndDisplayImageTask createLoadAndDisplayImageTask(DisplayImageOptions options, ImageLoadingInfo imageLoadingInfo) {
+        return new LoadAndDisplayImageTask(engine, imageLoadingInfo,
+                defineHandler(options));
+    }
+
+    protected ImageLoaderEngine getEngine() {
+        return engine;
+    }
+
+    /**
 	 * Adds display image task to execution pool. Image will be set to ImageView when it's turn. <br/>
 	 * Default {@linkplain DisplayImageOptions display image options} from {@linkplain ImageLoaderConfiguration
 	 * configuration} will be used.<br />
@@ -697,7 +705,7 @@ public class ImageLoader {
 		configuration = null;
 	}
 
-	private static Handler defineHandler(DisplayImageOptions options) {
+	protected static Handler defineHandler(DisplayImageOptions options) {
 		Handler handler = options.getHandler();
 		if (options.isSyncLoading()) {
 			handler = null;
