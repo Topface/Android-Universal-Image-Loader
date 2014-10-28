@@ -43,8 +43,20 @@ public final class MemoryCacheUtils {
 	 * Pattern for cache key - <b>[imageUri]_[width]x[height]</b>.
 	 */
 	public static String generateKey(String imageUri, ImageSize targetSize) {
-		return new StringBuilder(imageUri).append(URI_AND_SIZE_SEPARATOR).append(targetSize.getWidth()).append(WIDTH_AND_HEIGHT_SEPARATOR).append(targetSize.getHeight()).toString();
+		return new StringBuilder(imageUri)
+                .append(URI_AND_SIZE_SEPARATOR)
+                .append(targetSize.getWidth())
+                .append(WIDTH_AND_HEIGHT_SEPARATOR)
+                .append(targetSize.getHeight())
+                .toString();
 	}
+
+    public static String generateKey(String imageUri, String cacheKey) {
+        return new StringBuilder(imageUri)
+                .append(URI_AND_SIZE_SEPARATOR)
+                .append(cacheKey)
+                .toString();
+    }
 
 	public static Comparator<String> createFuzzyKeyComparator() {
 		return new Comparator<String>() {
