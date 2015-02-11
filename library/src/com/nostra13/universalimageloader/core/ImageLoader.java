@@ -203,6 +203,31 @@ public class ImageLoader {
 	 */
 	public void displayImage(String uri, ImageAware imageAware, DisplayImageOptions options,
 							 ImageLoadingListener listener, ImageLoadingProgressListener progressListener) {
+        displayImage(uri, imageAware, options, listener, progressListener, null);
+    }
+
+    /**
+     * Adds display image task to execution pool. Image will be set to ImageAware when it's turn.<br />
+     * <b>NOTE:</b> {@link #init(ImageLoaderConfiguration)} method must be called before this method call
+     *
+     * @param uri              Image URI (i.e. "http://site.com/image.png", "file:///mnt/sdcard/image.png")
+     * @param imageAware       {@linkplain com.nostra13.universalimageloader.core.imageaware.ImageAware Image aware view}
+     *                         which should display image
+     * @param options          {@linkplain com.nostra13.universalimageloader.core.DisplayImageOptions Options} for image
+     *                         decoding and displaying. If <b>null</b> - default display image options
+     *                         {@linkplain ImageLoaderConfiguration.Builder#defaultDisplayImageOptions(DisplayImageOptions)
+     *                         from configuration} will be used.
+     * @param listener         {@linkplain ImageLoadingListener Listener} for image loading process. Listener fires
+     *                         events on UI thread.
+     * @param progressListener {@linkplain com.nostra13.universalimageloader.core.listener.ImageLoadingProgressListener
+     *                         Listener} for image loading progress. Listener fires events on UI thread.
+     * @param cacheKey         key to retrieve cached Bitmap, if null then generated key will be used
+     * @throws IllegalStateException    if {@link #init(ImageLoaderConfiguration)} method wasn't called before
+     * @throws IllegalArgumentException if passed <b>imageAware</b> is null
+     */
+    public void displayImage(String uri, ImageAware imageAware, DisplayImageOptions options,
+                             ImageLoadingListener listener, ImageLoadingProgressListener progressListener,
+                             String cacheKey) {
 		checkConfiguration();
 		if (imageAware == null) {
 			throw new IllegalArgumentException(ERROR_WRONG_ARGUMENTS);
@@ -227,7 +252,9 @@ public class ImageLoader {
 		}
 
 		ImageSize targetSize = ImageSizeUtils.defineTargetSizeForView(imageAware, configuration.getMaxImageSize());
-		String memoryCacheKey = MemoryCacheUtils.generateKey(uri, targetSize);
+		String memoryCacheKey = TextUtils.isEmpty(cacheKey)
+                ? MemoryCacheUtils.generateKey(uri, targetSize)
+                : MemoryCacheUtils.generateKey(uri, cacheKey);
 		engine.prepareDisplayTaskFor(imageAware, memoryCacheKey);
 
 		listener.onLoadingStarted(uri, imageAware.getWrappedView());
@@ -340,12 +367,13 @@ public class ImageLoader {
 	 *                  from configuration} will be used.
 	 * @param listener  {@linkplain ImageLoadingListener Listener} for image loading process. Listener fires events on
 	 *                  UI thread.
+     * @param cacheKey  key to retrieve cached Bitmap, if null then generated key will be used
 	 * @throws IllegalStateException    if {@link #init(ImageLoaderConfiguration)} method wasn't called before
 	 * @throws IllegalArgumentException if passed <b>imageView</b> is null
 	 */
 	public void displayImage(String uri, ImageView imageView, DisplayImageOptions options,
-							 ImageLoadingListener listener) {
-		displayImage(uri, imageView, options, listener, null);
+							 ImageLoadingListener listener, String cacheKey) {
+		displayImage(uri, imageView, options, listener, null, cacheKey);
 	}
 
 	/**
@@ -362,12 +390,13 @@ public class ImageLoader {
 	 *                         events on UI thread.
 	 * @param progressListener {@linkplain com.nostra13.universalimageloader.core.listener.ImageLoadingProgressListener
 	 *                         Listener} for image loading progress. Listener fires events on UI thread.
+     * @param cacheKey         key to retrieve cached Bitmap, if null then generated key will be used
 	 * @throws IllegalStateException    if {@link #init(ImageLoaderConfiguration)} method wasn't called before
 	 * @throws IllegalArgumentException if passed <b>imageView</b> is null
 	 */
 	public void displayImage(String uri, ImageView imageView, DisplayImageOptions options,
-							 ImageLoadingListener listener, ImageLoadingProgressListener progressListener) {
-		displayImage(uri, new ImageViewAware(imageView), options, listener, progressListener);
+							 ImageLoadingListener listener, ImageLoadingProgressListener progressListener, String cacheKey) {
+		displayImage(uri, new ImageViewAware(imageView), options, listener, progressListener, cacheKey);
 	}
 
 	/**
