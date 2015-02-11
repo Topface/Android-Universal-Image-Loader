@@ -64,4 +64,9 @@ public interface ImageLoadingListener {
 	 * @param view     View for image. Can be <b>null</b>.
 	 */
 	void onLoadingCancelled(String imageUri, View view);
+
+    /**
+     * Is called when image was taken from memory cache, i.e. was cached
+     */
+    void onLoadedFromMemoryCache();
 }

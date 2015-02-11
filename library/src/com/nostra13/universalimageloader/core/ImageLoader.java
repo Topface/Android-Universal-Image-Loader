@@ -236,6 +236,8 @@ public class ImageLoader {
 		if (bmp != null && !bmp.isRecycled()) {
 			if (configuration.writeLogs) L.d(LOG_LOAD_IMAGE_FROM_MEMORY_CACHE, memoryCacheKey);
 
+            listener.onLoadedFromMemoryCache();
+
 			if (options.shouldPostProcess()) {
 				ImageLoadingInfo imageLoadingInfo = new ImageLoadingInfo(uri, imageAware, targetSize, memoryCacheKey,
 						options, listener, progressListener, engine.getLockForUri(uri));
