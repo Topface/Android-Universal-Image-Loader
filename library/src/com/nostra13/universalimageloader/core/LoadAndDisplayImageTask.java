@@ -164,7 +164,7 @@ class LoadAndDisplayImageTask implements Runnable, IoUtils.CopyListener {
 
 			if (bmp != null && options.shouldPostProcess()) {
 				log(LOG_POSTPROCESS_IMAGE);
-				bmp = processBitmap(options.getPostProcessor(), bmp);
+				bmp = options.getPostProcessor().process(bmp);
 				if (bmp == null) {
 					L.e(ERROR_POST_PROCESSOR_NULL, memoryCacheKey);
 				}
