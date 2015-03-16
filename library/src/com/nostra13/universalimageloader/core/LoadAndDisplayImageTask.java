@@ -31,6 +31,7 @@ import com.nostra13.universalimageloader.core.decode.ImageDecodingInfo;
 import com.nostra13.universalimageloader.core.download.ImageDownloader;
 import com.nostra13.universalimageloader.core.download.ImageDownloader.Scheme;
 import com.nostra13.universalimageloader.core.imageaware.ImageAware;
+import com.nostra13.universalimageloader.core.process.BitmapProcessor;
 import com.nostra13.universalimageloader.utils.IoUtils;
 import com.nostra13.universalimageloader.utils.L;
 
@@ -146,7 +147,7 @@ class LoadAndDisplayImageTask implements Runnable, IoUtils.CopyListener {
 
 				if (options.shouldPreProcess()) {
 					log(LOG_PREPROCESS_IMAGE);
-					bmp = options.getPreProcessor().process(bmp);
+					bmp = processBitmap(options.getPreProcessor(), bmp);
 					if (bmp == null) {
 						L.e(ERROR_PRE_PROCESSOR_NULL, memoryCacheKey);
 					}
@@ -180,6 +181,15 @@ class LoadAndDisplayImageTask implements Runnable, IoUtils.CopyListener {
 		DisplayBitmapTask displayBitmapTask = new DisplayBitmapTask(bmp, imageLoadingInfo, engine, loadedFrom);
 		displayBitmapTask.setLoggingEnabled(writeLogs);
 		runTask(displayBitmapTask, options.isSyncLoading(), handler);
+	}
+
+	private Bitmap processBitmap(BitmapProcessor processor, Bitmap bmp){
+		Bitmap input = bmp;
+		bmp = processor.process(bmp);
+		if (bmp != input) {
+			input.recycle();
+		}
+		return bmp;
 	}
 
 	/** @return <b>true</b> - if task should be interrupted; <b>false</b> - otherwise */
