@@ -369,6 +369,26 @@ public class ImageLoader {
 	 *                  from configuration} will be used.
 	 * @param listener  {@linkplain ImageLoadingListener Listener} for image loading process. Listener fires events on
 	 *                  UI thread if this method is called on UI thread.
+	 * @throws IllegalStateException    if {@link #init(ImageLoaderConfiguration)} method wasn't called before
+	 * @throws IllegalArgumentException if passed <b>imageView</b> is null
+	 */
+	public void displayImage(String uri, ImageView imageView, DisplayImageOptions options,
+							 ImageLoadingListener listener) {
+		displayImage(uri, imageView, options, listener, null, null);
+	}
+
+	/**
+	 * Adds display image task to execution pool. Image will be set to ImageView when it's turn.<br />
+	 * <b>NOTE:</b> {@link #init(ImageLoaderConfiguration)} method must be called before this method call
+	 *
+	 * @param uri       Image URI (i.e. "http://site.com/image.png", "file:///mnt/sdcard/image.png")
+	 * @param imageView {@link ImageView} which should display image
+	 * @param options   {@linkplain com.nostra13.universalimageloader.core.DisplayImageOptions Options} for image
+	 *                  decoding and displaying. If <b>null</b> - default display image options
+	 *                  {@linkplain ImageLoaderConfiguration.Builder#defaultDisplayImageOptions(DisplayImageOptions)
+	 *                  from configuration} will be used.
+	 * @param listener  {@linkplain ImageLoadingListener Listener} for image loading process. Listener fires events on
+	 *                  UI thread if this method is called on UI thread.
      * @param cacheKey  key to retrieve cached Bitmap, if null then generated key will be used*                  
 	 * @throws IllegalStateException    if {@link #init(ImageLoaderConfiguration)} method wasn't called before
 	 * @throws IllegalArgumentException if passed <b>imageView</b> is null
@@ -376,6 +396,31 @@ public class ImageLoader {
 	public void displayImage(String uri, ImageView imageView, DisplayImageOptions options,
 							 ImageLoadingListener listener, String cacheKey) {
 		displayImage(uri, imageView, options, listener, null, cacheKey);
+	}
+
+	/**
+	 * Adds display image task to execution pool. Image will be set to ImageView when it's turn.<br />
+	 * <b>NOTE:</b> {@link #init(ImageLoaderConfiguration)} method must be called before this method call
+	 *
+	 * @param uri              Image URI (i.e. "http://site.com/image.png", "file:///mnt/sdcard/image.png")
+	 * @param imageView        {@link ImageView} which should display image
+	 * @param options          {@linkplain com.nostra13.universalimageloader.core.DisplayImageOptions Options} for image
+	 *                         decoding and displaying. If <b>null</b> - default display image options
+	 *                         {@linkplain ImageLoaderConfiguration.Builder#defaultDisplayImageOptions(DisplayImageOptions)
+	 *                         from configuration} will be used.
+	 * @param listener         {@linkplain ImageLoadingListener Listener} for image loading process. Listener fires
+	 *                         events on UI thread if this method is called on UI thread.
+	 * @param progressListener {@linkplain com.nostra13.universalimageloader.core.listener.ImageLoadingProgressListener
+	 *                         Listener} for image loading progress. Listener fires events on UI thread if this method
+	 *                         is called on UI thread. Caching on disk should be enabled in
+	 *                         {@linkplain com.nostra13.universalimageloader.core.DisplayImageOptions options} to make
+	 *                         this listener work.
+	 * @throws IllegalStateException    if {@link #init(ImageLoaderConfiguration)} method wasn't called before
+	 * @throws IllegalArgumentException if passed <b>imageView</b> is null
+	 */
+	public void displayImage(String uri, ImageView imageView, DisplayImageOptions options,
+							 ImageLoadingListener listener, ImageLoadingProgressListener progressListener) {
+		displayImage(uri, new ImageViewAware(imageView), options, listener, progressListener, null);
 	}
 
 	/**
