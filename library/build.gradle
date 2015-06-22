@@ -1,5 +1,8 @@
 apply plugin: 'com.android.library'
+apply plugin: 'com.jfrog.bintray'
 
+group='com.nostra13.universalimageloader'
+version = project.VERSION
 android {
     compileSdkVersion 22
     buildToolsVersion "22.0.1"
@@ -8,7 +11,7 @@ android {
         minSdkVersion 5
         targetSdkVersion 22
         versionCode 40
-        versionName "1.9.5"
+        versionName project.VERSION
     }
 
     compileOptions {
@@ -43,3 +46,28 @@ android.libraryVariants.all { variant ->
 }
 
 apply from: '../gradle/maven_push.gradle'
+
+bintray {
+    Properties properties = new Properties()
+    properties.load(project.rootProject.file('signing.properties').newDataInputStream())
+    user = properties.getProperty('BINTRAY_USER')
+    key = properties.getProperty('BINTRAY_TOKEN')
+
+    configurations = ['archives'] //When uploading configuration files
+    pkg {
+        userOrg = 'topface'
+        repo = 'libs'
+        name = 'com.nostra13.universalimageloader:library'
+        desc = 'Android-Universal-Image-Loader forked by Topface'
+        websiteUrl = 'https://github.com/Topface/Android-Universal-Image-Loader'
+        issueTrackerUrl = 'https://github.com/Topface/Android-Universal-Image-Loader/issues'
+        vcsUrl = 'https://github.com/Topface/Android-Universal-Image-Loader.git'
+        licenses = ['Apache-2.0']
+        labels = ['aar', 'android', 'imageloader']
+        publicDownloadNumbers = true
+        version {
+            name = project.VERSION //Bintray logical version name
+            vcsTag = project.VERSION
+        }
+    }
+}
